@@ -2,6 +2,7 @@
  * Job Portal Connectors Module for BotValia Buscador
  * Manages portal scraping/search simulation for LinkedIn, Indeed, Torre, Computrabajo.
  */
+import { mockPortalJobs } from './data.js';
 
 const PORTAL_CONFIG = {
   linkedin: {
@@ -261,65 +262,37 @@ export function buildComputrabajoRegionalSearch(cv, desiredRole, country) {
 
 /**
  * Simulates a portal search returning mock results based on CV profile.
- * Each result mimics what a real portal would return.
+ * Uses the mock database in data.js and filters by keyword match.
  */
 export function simulatePortalSearch(portal, cv, jobTitle, count = 4, filters = {}) {
   const config = PORTAL_CONFIG[portal];
   if (!config) return [];
 
-  const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
-  const titleWords = (jobTitle || cv.title || '').split(' ');
+  const db = mockPortalJobs[portal];
+  if (!db || db.length === 0) return [];
 
-  const companies = {
-    linkedin: ['TechCorp', 'DataFlow Inc', 'CloudBase', 'NexGen Systems'],
-    indeed: ['InnovateTech', 'Matrix Solutions', 'Pioneer Labs', 'Summit Software'],
-    torre: ['Kickstart AI', 'RemoteFirst', 'GlobalDev', 'StarStudio'],
-    computrabajo: ['TecnoGlobal', 'Sistemas Plus', 'DigitalCol', 'Avantica']
-  };
+  let results = db.map((job, i) => ({
+    id: `${portal}-result-${Date.now()}-${i}`,
+    title: job.title,
+    company: job.company,
+    location: job.location,
+    source: portal,
+    url: config.baseUrl,
+    matchScore: job.matchScore || calculateKeywordMatch(job, cv),
+    remote: job.location.toLowerCase().includes('remote'),
+    salary: job.salary || '',
+    snippet: job.snippet,
+    postedDate: job.postedDate || `${Math.floor(Math.random() * 14) + 1}d ago`
+  }));
 
-  const defaultLocations = ['Remote', 'Bogotá, Colombia', 'Medellín, Colombia', 'São Paulo, Brazil', 'Mexico City, Mexico'];
-  const locations = filters.location
-    ? [filters.location, filters.location]
-    : defaultLocations;
-
-  const portalCompanies = companies[portal] || companies.linkedin;
-
-  const results = [];
-  for (let i = 0; i < count; i++) {
-    const role = titleWords.length > 1
-      ? titleWords.slice(0, 2).join(' ') + ' ' + (['Developer', 'Engineer', 'Architect', 'Specialist'][i % 4])
-      : skills[i % skills.length] + ' ' + (['Developer', 'Engineer'][i % 2]);
-
-    const company = portalCompanies[i % portalCompanies.length];
-    const location = locations[i % locations.length];
-
-    // Calculate a pseudo-random but deterministic match score
-    const scoreBase = (skills.length * 10 + (jobTitle ? jobTitle.length : 10) + i * 5) % 41 + 60;
-    const matchScore = Math.min(98, scoreBase);
-
-    const isRemote = location.toLowerCase().includes('remote') || filters.workType === 'remote';
-    const salaryDisplay = filters.salary
-      ? `USD $${parseInt(filters.salary).toLocaleString()} - $${(parseInt(filters.salary) + 30000).toLocaleString()}`
-      : '';
-
-    results.push({
-      id: `${portal}-result-${Date.now()}-${i}`,
-      title: role,
-      company: company,
-      location: location,
-      source: portal,
-      url: config.baseUrl,
-      matchScore: matchScore,
-      remote: isRemote,
-      salary: salaryDisplay,
-      snippet: `We are looking for a ${role} to join our team at ${company}. You will work with cutting-edge technologies in a collaborative environment.`,
-      postedDate: `${Math.floor(Math.random() * 14) + 1}d ago`
-    });
+  // Apply location filter
+  if (filters.location) {
+    results = results.filter(j => j.location.toLowerCase().includes(filters.location.toLowerCase()));
   }
 
-  // Apply work type filter post-generation
-  if (filters.workType === 'remote') return results.filter(r => r.remote);
-  if (filters.workType === 'onsite') return results.filter(r => !r.remote);
+  // Apply work type filter
+  if (filters.workType === 'remote') results = results.filter(j => j.remote);
+  if (filters.workType === 'onsite') results = results.filter(j => !j.remote);
 
-  return results;
+  return results.slice(0, count);
 }

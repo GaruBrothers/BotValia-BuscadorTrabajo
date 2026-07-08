@@ -94,3 +94,35 @@ Qualifications:
 - Note: Experience with JavaScript, React, or cloud infra is a plus, but secondary to algorithm design.`
   }
 ];
+
+/**
+ * Mock Portal Search Database
+ * Pre-seeded job listings simulating results from multiple portals.
+ */
+export const mockPortalJobs = {
+  linkedin: [
+    { title: 'Senior Full Stack Developer (Node.js/React)', company: 'Globant', location: 'Medellín, Colombia', snippet: 'We are looking for a Senior Full Stack Developer with strong Node.js and React skills.', matchScore: 92, postedDate: '2d ago', salary: 'USD $70,000 - $95,000' },
+    { title: 'Cloud Solutions Architect - AWS', company: 'Oracle', location: 'Remote', snippet: 'Design and implement scalable cloud architectures using AWS services.', matchScore: 88, postedDate: '1d ago', salary: 'USD $90,000 - $130,000' },
+    { title: 'DevOps Engineer - Containerization', company: 'MercadoLibre', location: 'Bogotá, Colombia', snippet: 'Manage CI/CD pipelines, Docker, and K8s for LATAM\'s largest e-commerce platform.', matchScore: 85, postedDate: '3d ago', salary: 'USD $50,000 - $75,000' },
+    { title: 'Senior Backend Developer (Node.js)', company: 'Wizeline', location: 'Remote', snippet: 'Build high-performance backend services using Node.js, Express, and PostgreSQL.', matchScore: 90, postedDate: '5d ago', salary: 'USD $65,000 - $90,000' },
+    { title: 'Fullstack Tech Lead', company: 'Rappi', location: 'Bogotá, Colombia', snippet: 'Lead a team building the next generation delivery logistics platform.', matchScore: 82, postedDate: '1d ago', salary: 'USD $80,000 - $110,000' }
+  ],
+  indeed: [
+    { title: 'Senior React Developer', company: 'EPAM Systems', location: 'Remote', snippet: 'Develop complex UIs using React, TypeScript, and modern frontend tooling.', matchScore: 86, postedDate: '4d ago', salary: 'USD $60,000 - $85,000' },
+    { title: 'Fullstack Engineer - JavaScript', company: 'BairesDev', location: 'Remote', snippet: 'Build web applications for Fortune 500 clients using Node and React.', matchScore: 84, postedDate: '2d ago', salary: 'USD $55,000 - $80,000' },
+    { title: 'Lead Cloud Engineer', company: 'Tata Consulting', location: 'Bogotá, Colombia', snippet: 'Oversee cloud migration projects and infrastructure automation for enterprise clients.', matchScore: 76, postedDate: '6d ago', salary: 'USD $70,000 - $95,000' },
+    { title: 'Software Architect - Fintech', company: 'Nubank', location: 'São Paulo, Brazil', snippet: 'Design scalable financial systems. Experience with distributed systems required.', matchScore: 72, postedDate: '3d ago', salary: 'USD $90,000 - $130,000' }
+  ],
+  torre: [
+    { title: 'Senior Software Engineer - Platform', company: 'Kickstart AI', location: 'Remote / Anywhere', snippet: 'Build and scale the core platform serving millions of users worldwide.', matchScore: 89, postedDate: '1d ago', salary: 'USD $80,000 - $120,000' },
+    { title: 'FullStack Developer for SaaS', company: 'RemoteFirst', location: 'Worldwide', snippet: 'Developing a next-gen SaaS platform using React, Node, and PostgreSQL.', matchScore: 87, postedDate: '2d ago', salary: 'USD $60,000 - $90,000' },
+    { title: 'DevOps & Cloud Specialist', company: 'GlobalDev', location: 'Latin America', snippet: 'Automate infrastructure and deployment pipelines for multiple product teams.', matchScore: 80, postedDate: '4d ago', salary: 'USD $50,000 - $75,000' },
+    { title: 'Technical Lead - Node.js', company: 'StarStudio', location: 'Remote / Anywhere', snippet: 'Lead backend architecture decisions and mentor a distributed engineering team.', matchScore: 83, postedDate: '3d ago', salary: 'USD $75,000 - $105,000' }
+  ],
+  computrabajo: [
+    { title: 'Desarrollador Fullstack Senior', company: 'TecnoGlobal', location: 'Bogotá, Colombia', snippet: 'Empresa de tecnología busca Desarrollador Fullstack con experiencia en Node.js y React.', matchScore: 91, postedDate: '1d ago', salary: 'COP $6,000,000 - $9,000,000' },
+    { title: 'Ingeniero DevOps Senior', company: 'Sistemas Plus', location: 'Medellín, Colombia', snippet: 'Administración de infraestructura cloud AWS, Docker y CI/CD.', matchScore: 83, postedDate: '3d ago', salary: 'COP $5,500,000 - $8,000,000' },
+    { title: 'Arquitecto de Software', company: 'DigitalCol', location: 'Bogotá, Colombia', snippet: 'Diseño de arquitecturas escalables en la nube. Microservicios y contenedores.', matchScore: 78, postedDate: '5d ago', salary: 'COP $7,000,000 - $10,000,000' },
+    { title: 'Líder Técnico Fullstack', company: 'Avantica', location: 'Remote - Colombia', snippet: 'Liderar equipo de desarrollo en proyectos internacionales. Stack: React, Node, AWS.', matchScore: 86, postedDate: '2d ago', salary: 'COP $6,500,000 - $9,500,000' }
+  ]
+};
