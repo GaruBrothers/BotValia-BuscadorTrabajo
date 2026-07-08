@@ -30,7 +30,10 @@ function initLocalStorage() {
   const storedJobs = localStorage.getItem('botvalia_jobs');
   const storedConfig = localStorage.getItem('botvalia_config');
 
-  if (storedCv) state.cv = JSON.parse(storedCv);
+  if (storedCv) {
+    state.cv = JSON.parse(storedCv);
+    if (!state.cv.skillProficiencies) state.cv.skillProficiencies = {};
+  }
   if (storedJobs) state.jobs = JSON.parse(storedJobs);
   if (storedConfig) state.apiConfig = JSON.parse(storedConfig);
 
@@ -105,6 +108,7 @@ function setupEventListeners() {
   document.getElementById('form-cv').addEventListener('submit', handleCVSubmit);
   document.getElementById('btn-clear-cv').addEventListener('click', handleCVClear);
   document.getElementById('btn-export-resume')?.addEventListener('click', handleExportResume);
+  document.getElementById('cv-skills')?.addEventListener('input', renderSkillTags);
 
   // AI Suggest buttons (delegated)
   document.getElementById('form-cv')?.addEventListener('click', (e) => {
@@ -1194,6 +1198,32 @@ function updateAPIIndicator() {
   }
 }
 
+function renderSkillTags() {
+  const container = document.getElementById('skills-tags-container');
+  if (!container) return;
+  const skillsText = (document.getElementById('cv-skills')?.value || '').trim();
+  const skillList = skillsText ? skillsText.split(',').map(s => s.trim()).filter(Boolean) : [];
+  if (skillList.length === 0) { container.innerHTML = '<span class="text-xs text-muted">Add skills above to see interactive tags.</span>'; return; }
+  const proficiencies = state.cv?.skillProficiencies || {};
+  container.innerHTML = skillList.map(skill => {
+    const stars = proficiencies[skill] || 3;
+    const starHtml = [1,2,3,4,5].map(n => `<span class="star-btn ${n <= stars ? 'star-active' : ''}" data-skill="${skill}" data-level="${n}">★</span>`).join('');
+    return `<span class="skill-tag-proficiency">${skill} ${starHtml}</span>`;
+  }).join(' ');
+  container.querySelectorAll('.star-btn').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const skill = el.dataset.skill;
+      const level = parseInt(el.dataset.level);
+      if (!state.cv) state.cv = { skillProficiencies: {} };
+      if (!state.cv.skillProficiencies) state.cv.skillProficiencies = {};
+      state.cv.skillProficiencies[skill] = level;
+      localStorage.setItem('botvalia_cv', JSON.stringify(state.cv));
+      renderSkillTags();
+    });
+  });
+}
+
 function renderCVDetails() {
   const fullName = document.getElementById('cv-full-name');
   const title = document.getElementById('cv-title');
@@ -1247,6 +1277,7 @@ function renderCVDetails() {
     summaryBox.innerHTML = '<p class="text-muted">No resume uploaded. Go to the "My CV Profile" tab to add your professional profile details.</p>';
   }
   renderCVPreview();
+  renderSkillTags();
 }
 
 function renderCVPreview() {
