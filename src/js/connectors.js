@@ -78,6 +78,53 @@ const PORTAL_CONFIG = {
     buildQuery: (skills, title) => {
       const q = title || skills.split(',').slice(0, 3).join(' ');
       return `?search=${encodeURIComponent(q)}`;
+    },
+    buildRichQuery: (cv, desiredRole) => {
+      const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const topSkills = skills.slice(0, 3).join(' ');
+      const role = desiredRole || cv.title || '';
+      const q = [role, topSkills].filter(Boolean).join(' ');
+      return `?search=${encodeURIComponent(q)}&remote=true&type=job`;
+    },
+    /**
+     * Simulates Torre's GraphQL-based search API.
+     * Torre.co exposes a public GraphQL endpoint; this mimics its response shape.
+     */
+    simulateApiSearch: async (cv, desiredRole, count = 6) => {
+      const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const titleWords = (desiredRole || cv.title || '').split(' ');
+
+      const torreOrgs = ['Kickstart AI', 'RemoteFirst', 'GlobalDev', 'StarStudio', 'HireLoop', 'TalentNow'];
+      const torreLocations = ['Remote / Anywhere', 'Colombia (Remote)', 'Latin America', 'Worldwide'];
+      const currencies = ['USD', 'COP', 'USD', 'USD'];
+      const minSalaries = [30000, 4000000, 50000, 70000];
+      const maxSalaries = [70000, 8000000, 120000, 150000];
+
+      const results = [];
+      for (let i = 0; i < count; i++) {
+        const role = titleWords.length > 1
+          ? `${titleWords.slice(0, 2).join(' ')} ${['Developer', 'Engineer', 'Lead', 'Specialist'][i % 4]}`
+          : `${skills[i % skills.length] || 'Software'} ${['Engineer', 'Developer'][i % 2]}`;
+
+        const org = torreOrgs[i % torreOrgs.length];
+        const location = torreLocations[i % torreLocations.length];
+        const skillMatch = Math.floor(55 + (skills.length * 4 + i * 7) % 40);
+
+        results.push({
+          id: `torre-api-${Date.now()}-${i}`,
+          title: role,
+          company: org,
+          location,
+          source: 'torre',
+          url: `https://torre.co/jobs/${encodeURIComponent(role.toLowerCase().replace(/\s+/g, '-'))}`,
+          matchScore: Math.min(99, skillMatch),
+          snippet: `${org} is hiring a ${role}. Join a world-class team working on cutting-edge projects.`,
+          postedDate: `${Math.floor(Math.random() * 10) + 1}d ago`,
+          salary: `${currencies[i % currencies.length]} $${minSalaries[i % minSalaries.length].toLocaleString()} - $${maxSalaries[i % maxSalaries.length].toLocaleString()}`,
+          remote: true
+        });
+      }
+      return results;
     }
   },
   computrabajo: {
@@ -112,6 +159,14 @@ export function buildLinkedInRichQuery(cv, desiredRole) {
 
 export function buildIndeedRichQuery(cv, desiredRole, remoteOnly, salary) {
   return PORTAL_CONFIG.indeed.buildRichQuery(cv, desiredRole, remoteOnly, salary);
+}
+
+export function buildTorreRichQuery(cv, desiredRole) {
+  return PORTAL_CONFIG.torre.buildRichQuery(cv, desiredRole);
+}
+
+export async function simulateTorreApi(cv, desiredRole, count) {
+  return PORTAL_CONFIG.torre.simulateApiSearch(cv, desiredRole, count);
 }
 
 /**
