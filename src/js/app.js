@@ -146,6 +146,7 @@ function setupEventListeners() {
 
   // Match Action
   document.getElementById('btn-run-match').addEventListener('click', handleCalculateMatch);
+  document.getElementById('btn-save-match-report')?.addEventListener('click', handleSaveMatchReport);
   document.getElementById('btn-reset-weights')?.addEventListener('click', () => {
     state.skillWeights = {};
     localStorage.setItem('botvalia_skill_weights', JSON.stringify({}));
@@ -421,6 +422,27 @@ function renderCVVersionSelector() {
       showToast(`Version ${version} restored. Click "Save Resume Profile" to persist.`);
     }
   });
+}
+
+function handleSaveMatchReport() {
+  const jobId = document.getElementById('match-select-job').value;
+  if (!jobId) { showToast('Select a job first.'); return; }
+  const job = state.jobs.find(j => j.id === jobId);
+  if (!job || !job.matchDetails) { showToast('Run a match analysis first.'); return; }
+  const report = {
+    exportedAt: new Date().toISOString(),
+    candidate: { fullName: state.cv?.fullName, title: state.cv?.title, skills: state.cv?.skills },
+    job: { title: job.title, company: job.company, source: job.source },
+    matchScore: job.matchScore,
+    details: job.matchDetails
+  };
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `MatchReport_${job.company.replace(/\s+/g, '_')}_${job.title.replace(/\s+/g, '_')}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Match report saved as JSON.');
 }
 
 function addMissingSkill(skillName, silent) {
@@ -1659,8 +1681,9 @@ function renderJobsTab() {
     const statusLevel = job.status === 'Offer' ? 'badge-success' : job.status === 'Rejected' ? 'badge-danger' : job.status === 'Interviewing' ? 'badge-primary' : 'badge-secondary';
 
     const sourceNames = { linkedin: 'LinkedIn', indeed: 'Indeed', torre: 'Torre.co', computrabajo: 'Computrabajo' };
+    const sourceIcons = { linkedin: 'fa-brands fa-linkedin', indeed: 'fa-solid fa-briefcase', torre: 'fa-solid fa-tower-broadcast', computrabajo: 'fa-solid fa-building' };
     const sourceBadge = job.source && sourceNames[job.source]
-      ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem">${sourceNames[job.source]}</span>`
+      ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem"><i class="${sourceIcons[job.source]}"></i> ${sourceNames[job.source]}</span>`
       : '';
     const appliedBadge = job.appliedDate
       ? `<span style="font-size:0.65rem;color:var(--text-muted)">📅 ${job.appliedDate}</span>`
@@ -1783,8 +1806,9 @@ function renderDashboard() {
     const statusLevel = job.status === 'Offer' ? 'badge-success' : job.status === 'Rejected' ? 'badge-danger' : job.status === 'Interviewing' ? 'badge-primary' : 'badge-secondary';
 
     const srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', torre: 'Torre.co', computrabajo: 'Computrabajo' };
+    const srcIcons = { linkedin: 'fa-brands fa-linkedin', indeed: 'fa-solid fa-briefcase', torre: 'fa-solid fa-tower-broadcast', computrabajo: 'fa-solid fa-building' };
     const dashSrcBadge = job.source && srcNames[job.source]
-      ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem">${srcNames[job.source]}</span>`
+      ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem"><i class="${srcIcons[job.source]}"></i> ${srcNames[job.source]}</span>`
       : '';
 
     return `
