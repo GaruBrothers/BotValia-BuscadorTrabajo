@@ -1159,8 +1159,11 @@ function renderDashboard() {
     });
   });
 
-  // Render/Update status charts
-  updateStatusChart();
+  // Render match trends chart
+  renderMatchTrendsChart();
+
+  // Render skill demand chart
+  renderSkillDemandChart();
 }
 
 function updateStatusChart() {
@@ -1249,6 +1252,60 @@ function updateStatusChart() {
       }
     });
   }
+}
+
+function renderMatchTrendsChart() {
+  const container = document.getElementById('match-trends-chart');
+  if (!container) return;
+  const scoredJobs = state.jobs.filter(j => j.matchScore !== undefined).sort((a, b) => b.matchScore - a.matchScore);
+  if (scoredJobs.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="border:none;padding:1rem"><p class="text-xs text-muted">Analyze jobs to see match trends</p></div>`;
+    return;
+  }
+  const maxScore = 100;
+  const barColors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444'];
+  container.innerHTML = scoredJobs.slice(0, 8).map((job, i) => {
+    const height = Math.max(8, (job.matchScore / maxScore) * 100);
+    const color = job.matchScore > 80 ? '#10b981' : job.matchScore > 60 ? '#3b82f6' : '#f59e0b';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:0.25rem" title="${job.title}: ${job.matchScore}%">
+      <span style="font-size:0.55rem;color:var(--text-muted);writing-mode:vertical-lr;text-orientation:mixed;transform:rotate(180deg);overflow:hidden;text-overflow:ellipsis;max-height:40px">${job.title.split(' ').slice(0, 2).join(' ')}</span>
+      <div style="width:100%;max-width:40px;height:${height}%;border-radius:4px 4px 0 0;background:${color};opacity:0.7;transition:height 0.3s ease" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'"></div>
+      <span style="font-size:0.6rem;font-weight:700;color:var(--text-secondary)">${job.matchScore}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderSkillDemandChart() {
+  const container = document.getElementById('skill-demand-chart');
+  if (!container) return;
+  const allText = state.jobs.map(j => (j.title + ' ' + j.description).toLowerCase()).join(' ');
+  if (!allText.trim()) {
+    container.innerHTML = `<div class="empty-state" style="border:none;padding:1rem"><p class="text-xs text-muted">Add job descriptions to see skill demand analysis</p></div>`;
+    return;
+  }
+  const techKeywords = ['javascript', 'typescript', 'node.js', 'react', 'python', 'docker', 'aws', 'postgresql', 'kubernetes', 'graphql', 'next.js', 'terraform', 'ci/cd', 'git', 'mongodb', 'express', 'css', 'html', 'redux', 'jest'];
+  const counts = {};
+  techKeywords.forEach(kw => {
+    const regex = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const count = (allText.match(regex) || []).length;
+    if (count > 0) counts[kw] = count;
+  });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  if (sorted.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="border:none;padding:1rem"><p class="text-xs text-muted">No tech skills detected in job descriptions</p></div>`;
+    return;
+  }
+  const maxCount = sorted[0][1];
+  container.innerHTML = sorted.map(([skill, count]) => {
+    const pct = (count / maxCount) * 100;
+    return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem">
+      <span style="font-size:0.7rem;min-width:80px;text-align:right;color:var(--text-secondary);text-transform:capitalize">${skill}</span>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:3px;transition:width 0.5s ease"></div>
+      </div>
+      <span style="font-size:0.65rem;min-width:20px;color:var(--text-muted);font-weight:600">${count}</span>
+    </div>`;
+  }).join('');
 }
 
 // ==========================================================================
