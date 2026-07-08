@@ -496,6 +496,7 @@ async function handleScanPortals() {
           company: company,
           url: '',
           status: 'Interested',
+          source: source,
           description: `Position: ${title}\nCompany: ${company}\nSource: ${source}\n\n${snippet}`
         };
         state.jobs.push(jobData);
@@ -899,12 +900,18 @@ function renderJobsTab() {
 
     const statusLevel = job.status === 'Offer' ? 'badge-success' : job.status === 'Rejected' ? 'badge-danger' : job.status === 'Interviewing' ? 'badge-primary' : 'badge-secondary';
 
+    const sourceNames = { linkedin: 'LinkedIn', indeed: 'Indeed', torre: 'Torre.co', computrabajo: 'Computrabajo' };
+    const sourceBadge = job.source && sourceNames[job.source]
+      ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem">${sourceNames[job.source]}</span>`
+      : '';
+
     return `
       <div class="job-card" data-id="${job.id}">
         <div class="job-info">
           <h4>${job.title}</h4>
           <div class="job-meta">
             <strong>${job.company}</strong>
+            ${sourceBadge}
             <span class="badge ${statusLevel}">${job.status}</span>
             ${scoreBadge}
           </div>
@@ -991,10 +998,15 @@ function renderDashboard() {
 
     const statusLevel = job.status === 'Offer' ? 'badge-success' : job.status === 'Rejected' ? 'badge-danger' : job.status === 'Interviewing' ? 'badge-primary' : 'badge-secondary';
 
+    const srcNames = { linkedin: 'LinkedIn', indeed: 'Indeed', torre: 'Torre.co', computrabajo: 'Computrabajo' };
+    const dashSrcBadge = job.source && srcNames[job.source]
+      ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem">${srcNames[job.source]}</span>`
+      : '';
+
     return `
       <tr>
         <td><strong>${job.title}</strong></td>
-        <td>${job.company}</td>
+        <td>${job.company} ${dashSrcBadge}</td>
         <td><span class="badge ${statusLevel}">${job.status}</span></td>
         <td>${scoreDisplay}</td>
         <td>
