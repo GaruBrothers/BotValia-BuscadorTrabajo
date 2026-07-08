@@ -10,7 +10,8 @@ let state = {
     key: '',
     model: ''
   },
-  selectedJobId: null
+  selectedJobId: null,
+  statusChart: null
 };
 
 // ==========================================================================
@@ -840,6 +841,97 @@ function renderDashboard() {
       }
     });
   });
+
+  // Render/Update status charts
+  updateStatusChart();
+}
+
+function updateStatusChart() {
+  const ctx = document.getElementById('status-chart');
+  if (!ctx) return;
+
+  const counts = {
+    Interested: 0,
+    Applied: 0,
+    Interviewing: 0,
+    Offer: 0,
+    Rejected: 0
+  };
+
+  state.jobs.forEach(job => {
+    if (counts[job.status] !== undefined) {
+      counts[job.status]++;
+    }
+  });
+
+  const dataValues = [
+    counts.Interested,
+    counts.Applied,
+    counts.Interviewing,
+    counts.Offer,
+    counts.Rejected
+  ];
+
+  if (state.statusChart) {
+    state.statusChart.data.datasets[0].data = dataValues;
+    state.statusChart.update();
+  } else {
+    if (typeof Chart === 'undefined') {
+      console.warn("Chart.js is not loaded yet.");
+      return;
+    }
+
+    state.statusChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Interested', 'Applied', 'Interviewing', 'Offer', 'Rejected'],
+        datasets: [{
+          data: dataValues,
+          backgroundColor: [
+            'rgba(156, 163, 175, 0.25)',
+            'rgba(59, 130, 246, 0.25)',
+            'rgba(139, 92, 246, 0.25)',
+            'rgba(16, 185, 129, 0.25)',
+            'rgba(239, 68, 68, 0.25)'
+          ],
+          borderColor: [
+            'rgba(156, 163, 175, 0.8)',
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(139, 92, 246, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(239, 68, 68, 0.8)'
+          ],
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#9ca3af',
+              font: {
+                family: 'Inter',
+                size: 11
+              },
+              boxWidth: 12,
+              padding: 10
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ` ${context.label}: ${context.raw} vacancies`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
 }
 
 // Syncing functions across tabs
