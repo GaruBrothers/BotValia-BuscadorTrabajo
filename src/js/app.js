@@ -363,6 +363,10 @@ async function handleFileSelect(file) {
     if (text) {
       document.getElementById('cv-body').value = text;
       uploadZone.classList.add('has-file');
+      const extracted = extractCVFields(text);
+      if (extracted.fullName) document.getElementById('cv-full-name').value = extracted.fullName;
+      if (extracted.title) document.getElementById('cv-title').value = extracted.title;
+      if (extracted.skills) document.getElementById('cv-skills').value = extracted.skills;
       showToast(`CV content extracted from ${file.name}`);
     }
   } catch (err) {
@@ -399,6 +403,77 @@ async function parsePdfFile(file) {
   }
 
   return fullText.trim();
+}
+
+/**
+ * Client-side heuristic CV field extractor.
+ * Parses raw CV text to guess the candidate's name, title, and skills.
+ */
+function extractCVFields(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const result = { fullName: '', title: '', skills: '' };
+
+  // 1. Name: first non-empty line that doesn't look like a section header
+  for (const line of lines) {
+    const isHeader = /^#|^[A-Z\s]{3,}:|^(skills|experience|education|summary|profile|work)/i.test(line);
+    const isShort = line.length < 3;
+    const hasBullet = /^[-*•]/.test(line);
+    const hasEmail = /@/.test(line);
+    const hasUrl = /http|linkedin|github/i.test(line);
+    if (!isHeader && !isShort && !hasBullet && !hasEmail && !hasUrl && line.split(' ').length >= 2 && line.split(' ').length <= 6) {
+      result.fullName = line;
+      break;
+    }
+  }
+
+  // 2. Title: look for a line containing common title keywords
+  const titleKeywords = ['senior', 'junior', 'lead', 'head', 'chief', 'manager', 'engineer', 'developer', 'architect', 'analyst', 'specialist', 'consultant', 'director', 'fullstack', 'full stack', 'frontend', 'backend', 'devops', 'data', 'cloud', 'software', 'web', 'ai', 'ml'];
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    const matchCount = titleKeywords.filter(k => lower.includes(k)).length;
+    if (matchCount >= 2 && line.split(' ').length >= 3 && line.split(' ').length <= 15) {
+      const isHeader = /^#/.test(line);
+      if (!isHeader) {
+        result.title = line.replace(/^[-*•]\s*/, '').replace(/[|].*$/, '').trim();
+        break;
+      }
+    }
+  }
+
+  // 3. Skills: find a "Skills" section or extract known tech terms
+  const techKeywords = ['javascript', 'typescript', 'node.js', 'nodejs', 'react', 'react.js', 'vue', 'angular', 'python', 'java', 'c#', 'c++', 'go', 'rust', 'docker', 'kubernetes', 'k8s', 'aws', 'azure', 'gcp', 'postgresql', 'postgres', 'mysql', 'mongodb', 'redis', 'graphql', 'rest', 'api', 'git', 'ci/cd', 'terraform', 'jenkins', 'linux', 'html', 'css', 'sass', 'tailwind', 'bootstrap', 'redux', 'next.js', 'nextjs', 'express', 'django', 'flask', 'spring', 'dotnet', 'firebase', 'vercel', 'heroku', 'nginx', 'webpack', 'vite', 'jest', 'mocha', 'cypress'];
+  const foundSkills = [];
+
+  // First look for a "Skills" section line
+  const skillsSectionIndex = lines.findIndex(l => /^skills|^technologies|^tech stack|^core competencies/i.test(l));
+  if (skillsSectionIndex >= 0) {
+    for (let i = skillsSectionIndex + 1; i < Math.min(skillsSectionIndex + 10, lines.length); i++) {
+      const line = lines[i];
+      if (/^#|^[A-Z][a-z]+:/.test(line)) break;
+      const terms = line.split(/[,|•·;\n]+/).map(s => s.trim()).filter(Boolean);
+      terms.forEach(t => {
+        if (techKeywords.some(k => t.toLowerCase().includes(k))) {
+          foundSkills.push(t);
+        }
+      });
+    }
+  }
+
+  // If no skills section found, scan the entire text
+  if (foundSkills.length === 0) {
+    const textLower = text.toLowerCase();
+    techKeywords.forEach(kw => {
+      if (textLower.includes(kw) && !foundSkills.some(f => f.toLowerCase() === kw)) {
+        foundSkills.push(kw.charAt(0).toUpperCase() + kw.slice(1));
+      }
+    });
+  }
+
+  if (foundSkills.length > 0) {
+    result.skills = [...new Set(foundSkills)].slice(0, 20).join(', ');
+  }
+
+  return result;
 }
 
 function loadScript(src) {
