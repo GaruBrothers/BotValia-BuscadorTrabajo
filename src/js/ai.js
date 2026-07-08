@@ -530,33 +530,79 @@ function cleanJsonResponse(raw) {
 /* ==========================================================================
    SMART MOCK SIMULATION ENGINE (No API Key Required)
    ========================================================================== */
+const SYNONYM_GROUPS = [
+  ['fullstack', 'full stack', 'frontend', 'backend', 'full-stack', 'web developer', 'web dev'],
+  ['devops', 'sre', 'platform engineer', 'site reliability', 'infrastructure', 'cloud engineer'],
+  ['javascript', 'js', 'ecmascript', 'es6', 'es2015'],
+  ['typescript', 'ts'],
+  ['node.js', 'nodejs', 'node', 'express', 'express.js', 'expressjs'],
+  ['react', 'reactjs', 'react.js', 'react native', 'next.js', 'nextjs', 'remix', 'gatsby'],
+  ['vue', 'vuejs', 'vue.js', 'nuxt', 'nuxtjs'],
+  ['angular', 'angularjs', 'angular 2'],
+  ['python', 'django', 'flask', 'fastapi'],
+  ['java', 'spring', 'spring boot', 'jvm', 'kotlin'],
+  ['sql', 'postgresql', 'postgres', 'mysql', 'database', 'rdbms', 'relational database'],
+  ['nosql', 'mongodb', 'redis', 'cassandra', 'dynamodb', 'firestore'],
+  ['docker', 'container', 'containerization'],
+  ['kubernetes', 'k8s', 'eks', 'gke', 'aks', 'orchestration'],
+  ['aws', 'amazon web services', 'ec2', 's3', 'lambda', 'ecs', 'eks', 'cloudformation'],
+  ['gcp', 'google cloud', 'gcs', 'cloud run', 'bigquery'],
+  ['azure', 'microsoft azure', 'azure devops'],
+  ['graphql', 'apollo', 'relay'],
+  ['rest', 'restful', 'rest api', 'restapi'],
+  ['ci/cd', 'cicd', 'continuous integration', 'continuous deployment', 'github actions', 'gitlab ci', 'jenkins'],
+  ['git', 'github', 'gitlab', 'bitbucket', 'version control', 'vcs'],
+  ['agile', 'scrum', 'kanban', 'sprint', 'standup'],
+  ['machine learning', 'ml', 'artificial intelligence', 'ai', 'deep learning', 'neural network'],
+  ['data science', 'data analysis', 'statistics', 'analytics', 'data pipeline'],
+  ['terraform', 'iac', 'infrastructure as code', 'pulumi', 'cloudformation'],
+  ['testing', 'jest', 'mocha', 'cypress', 'playwright', 'selenium', 'unit test', 'e2e', 'integration test'],
+  ['security', 'cybersecurity', 'owasp', 'authentication', 'authorization', 'oauth', 'jwt', 'ssl', 'tls'],
+  ['mobile', 'ios', 'android', 'react native', 'flutter', 'swift', 'kotlin'],
+  ['microservices', 'micro-service', 'service-oriented', 'soa', 'distributed systems'],
+  ['leadership', 'lead', 'senior', 'staff', 'principal', 'tech lead', 'team lead', 'manager'],
+];
+
 function calculateKeywordOverlapScore(cv, job) {
   const cvText = `${cv.fullName} ${cv.title} ${cv.skills} ${cv.body}`.toLowerCase();
   const jobText = `${job.title} ${job.company} ${job.description}`.toLowerCase();
 
-  // Extract keywords
-  const keywords = [
-    'javascript', 'typescript', 'node.js', 'node', 'next.js', 'nextjs', 'react', 'reactjs',
-    'postgresql', 'postgres', 'docker', 'aws', 'amazon', 'cloud', 'devops', 'ci/cd', 'github',
-    'python', 'pytorch', 'tensorflow', 'data science', 'kubernetes', 'terraform', 'graphql',
-    'rest', 'api', 'scrum', 'agile'
-  ];
-
   let matches = 0;
   let totalInJob = 0;
 
-  keywords.forEach(word => {
-    const inJob = jobText.includes(word);
+  SYNONYM_GROUPS.forEach(group => {
+    const inJob = group.some(word => jobText.includes(word));
     if (inJob) {
       totalInJob++;
-      if (cvText.includes(word)) {
+      if (group.some(word => cvText.includes(word))) {
         matches++;
       }
     }
   });
 
-  if (totalInJob === 0) return 70; // Default
-  return Math.round((matches / totalInJob) * 100);
+  // Also check title-level synonyms
+  const cvTitle = cv.title.toLowerCase();
+  const jobTitle = job.title.toLowerCase();
+  const titleGroups = [
+    ['fullstack', 'full stack', 'frontend', 'backend', 'full-stack', 'web'],
+    ['devops', 'sre', 'platform', 'infrastructure', 'cloud', 'site reliability'],
+    ['data', 'analyst', 'analytics', 'data science', 'machine learning', 'ml', 'ai'],
+    ['senior', 'lead', 'staff', 'principal', 'head', 'chief', 'manager'],
+    ['engineer', 'developer', 'architect', 'programmer', 'software'],
+  ];
+  titleGroups.forEach(group => {
+    const inJobTitle = group.some(w => jobTitle.includes(w));
+    const inCvTitle = group.some(w => cvTitle.includes(w));
+    if (inJobTitle && inCvTitle) {
+      matches += 2;
+      totalInJob += 2;
+    } else if (inJobTitle) {
+      totalInJob += 2;
+    }
+  });
+
+  if (totalInJob === 0) return 70;
+  return Math.min(Math.round((matches / totalInJob) * 100), 100);
 }
 
 function simulateMatch(cv, job) {
