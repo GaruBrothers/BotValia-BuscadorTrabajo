@@ -87,12 +87,15 @@ Include:
 /**
  * Generates a customized cover letter.
  */
-export async function generateCoverLetter(cv, job, tone, apiConfig) {
+export async function generateCoverLetter(cv, job, tone, apiConfig, length, rewrite) {
+  const lengthGuide = length === 'short' ? 'Write a concise 1-paragraph cover letter (max 150 words).' : length === 'long' ? 'Write a detailed 5-paragraph cover letter (400-500 words).' : 'Write a standard 3-paragraph cover letter (250-350 words).';
+  const rewriteGuide = rewrite ? `After writing the letter, rewrite it to make it ${rewrite}.` : '';
   const prompt = `You are an expert career advisor. Write a customized cover letter for:
 Candidate: ${cv.fullName} (${cv.title})
 Applying for: ${job.title} at ${job.company}
 
 TONE: ${tone}
+${lengthGuide}
 
 Use the candidate's achievements and skills from their CV:
 Skills: ${cv.skills}
@@ -102,10 +105,14 @@ ${cv.body}
 And match it to the Job requirements:
 ${job.description}
 
-Draft a complete, professional, and convincing cover letter. Do not include placeholders (like [Date] or [Insert Name]). Invent realistic details or omit them. Include salutation, body paragraphs matching the candidate's strengths, and a professional sign-off.`;
+Draft a complete, professional, and convincing cover letter. Do not include placeholders (like [Date] or [Insert Name]). Invent realistic details or omit them. Include salutation, body paragraphs matching the candidate's strengths, and a professional sign-off. ${rewriteGuide}`;
 
   if (apiConfig.provider === 'mock') {
-    return simulateCoverLetter(cv, job, tone);
+    const base = simulateCoverLetter(cv, job, tone);
+    if (rewrite === 'technical') return base + '\n\n[Revised for technical emphasis: Added specific technology mentions and quantifiable results.]';
+    if (rewrite === 'concise') return base.replace(/\n{2,}/g, '\n').split('\n').slice(0, 8).join('\n') + '\n\n[Revised for conciseness]';
+    if (rewrite === 'formal') return base.replace(/\bI'm\b/g, 'I am').replace(/\bI've\b/g, 'I have').replace(/\bdon't\b/g, 'do not') + '\n\n[Revised for formal tone]';
+    return base;
   }
 
   try {
@@ -202,6 +209,54 @@ export async function suggestCVImprovement(sectionName, sectionContent, apiConfi
       resolve(enhancements[sectionName] || `Improved version of ${sectionName} content. Consider adding more quantifiable achievements and relevant keywords.`);
     }, 800);
   });
+}
+
+/**
+ * Generates a recruiter email draft based on type.
+ */
+export async function generateEmailDraft(cv, job, type, contactName, contactEmail, apiConfig) {
+  const prompts = {
+    introduction: `Write a professional email from ${cv.fullName} (${cv.title}) introducing themselves to ${contactName || 'the hiring manager'}${contactEmail ? ' (' + contactEmail + ')' : ''} regarding the ${job.title} position at ${job.company}. Highlight top skills (${cv.skills}) and express interest. Be concise and include a call to action.`,
+    followup: `Write a polite follow-up email from ${cv.fullName} after applying for ${job.title} at ${job.company}. To ${contactName || 'the hiring team'}. Express continued interest, mention key qualifications, and ask about next steps.`,
+    thankyou: `Write a thank-you email from ${cv.fullName} after an interview for ${job.title} at ${job.company}. To ${contactName || 'the interviewer'}. Thank them, reiterate interest, and mention one key takeaway.`,
+    negotiation: `Write a polite salary negotiation email from ${cv.fullName} for the ${job.title} offer at ${job.company}. To ${contactName || 'the recruiter'}. Express gratitude, state the desired adjustment professionally, and justify with skills (${cv.skills}).`,
+  };
+  const prompt = prompts[type] || prompts.introduction;
+  if (apiConfig.provider === 'mock') {
+    const signatures = { introduction: 'Best regards,\n' + cv.fullName, followup: 'Best regards,\n' + cv.fullName, thankyou: 'Sincerely,\n' + cv.fullName, negotiation: 'Thank you for your consideration,\n' + cv.fullName };
+    return `Subject: ${type === 'introduction' ? 'Application for ' + job.title : type === 'followup' ? 'Follow-up on ' + job.title : type === 'thankyou' ? 'Thank you - ' + job.title : 'Regarding ' + job.title + ' offer'}
+
+Dear ${contactName || 'Hiring Team'},
+
+${type === 'introduction' ? `I am writing to express my strong interest in the ${job.title} position at ${job.company}. With my background in ${cv.title} and expertise in ${cv.skills}, I am confident I can contribute significantly to your team.` : type === 'followup' ? `I recently applied for the ${job.title} position and wanted to follow up. I remain very interested in this opportunity and would welcome the chance to discuss how my skills align with ${job.company}'s needs.` : type === 'thankyou' ? `Thank you for the opportunity to interview for the ${job.title} position. I appreciated learning more about the team and the exciting work at ${job.company}. I am very enthusiastic about this role.` : `I am very grateful for the offer to join ${job.company} as a ${job.title}. After careful consideration, I would like to discuss the compensation package. Based on my experience and skills, I was hoping for a salary in the range discussed.`}
+
+${signatures[type]}`;
+  }
+  try { return await makeAICall(prompt, apiConfig); } catch (e) { throw new Error('Failed to generate email: ' + e.message); }
+}
+
+/**
+ * Grades a user's practice interview answer and returns improvement suggestions.
+ */
+export async function gradeInterviewAnswer(question, userAnswer, apiConfig) {
+  const prompt = `You are an interview coach. The candidate answered this interview question:
+
+Question: "${question}"
+
+Candidate's Answer: "${userAnswer}"
+
+Provide constructive feedback in this format:
+- Score: X/10
+- Strengths: (list 1-2 things done well)
+- Areas for Improvement: (list 1-2 things to improve)
+- Model Answer Suggestion: (a short improved version)
+
+Be specific and actionable.`;
+  if (apiConfig.provider === 'mock') {
+    const mockFeedback = 'Score: 7/10\n\nStrengths:\n- The answer shows relevant experience and uses specific technology names.\n- Clear structure with a logical flow from context to action.\n\nAreas for Improvement:\n- Add a quantifiable metric to demonstrate impact.\n- Connect the experience more directly to the job requirements.\n\nModel Answer Suggestion:\nIn my previous role, I led the migration of a monolith to microservices using Node.js and Docker, which reduced deployment time by 60% and improved system reliability. This experience aligns well with your need for scalable architecture.';
+    return new Promise(resolve => setTimeout(() => resolve(mockFeedback), 800));
+  }
+  try { return await makeAICall(prompt, apiConfig); } catch (e) { return 'Score: N/A\n\nUnable to grade at this time. Error: ' + e.message; }
 }
 
 /**
@@ -337,7 +392,11 @@ The letter should: State the resignation, express gratitude for opportunities, o
 Candidate: ${cv.fullName} (${cv.title})
 Regarding offer from: ${job ? job.company : 'the company'}
 To ${contactName || 'the recruiter'}${contactEmail ? ' (' + contactEmail + ')' : ''}
-The email should: Thank them for the offer, express enthusiasm for the role, respectfully negotiate the salary or benefits (mention specific numbers or percentages if needed), and remain open to discussion.`
+The email should: Thank them for the offer, express enthusiasm for the role, respectfully negotiate the salary or benefits (mention specific numbers or percentages if needed), and remain open to discussion.`,
+
+    'linkedin-connection': `You are a thoughtful networker. Write a brief LinkedIn connection request message (under 300 characters) from ${cv.fullName} (${cv.title}) to ${contactName || 'a professional contact'}${contactEmail ? ' (' + contactEmail + ')' : ''}. Mention shared interest in technology/recruiting and a polite ask to connect. Be professional and friendly. No spammy sales language.`,
+
+    'referral-request': `You are a job seeker asking a current employee for a referral. Write a polite referral request message from ${cv.fullName} (${cv.title}) to a friend/contact at ${job ? job.company : 'the company'}. Be brief, mention your skills (${cv.skills}), express interest in the ${job ? job.title + ' role' : 'current openings'}, and ask if they could refer or pass along your resume.`
   };
 
   const prompt = prompts[templateType] || prompts['cold-linkedin'];

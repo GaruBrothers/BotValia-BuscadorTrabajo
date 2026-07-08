@@ -1,5 +1,5 @@
 import { defaultCV, defaultJobs } from './data.js';
-import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep, generateMessage, enhanceCVFields, suggestCVImprovement } from './ai.js';
+import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep, generateMessage, enhanceCVFields, suggestCVImprovement, generateEmailDraft, gradeInterviewAnswer } from './ai.js';
 import { buildPortalUrl, simulatePortalSearch, getAllPortalKeys, getPortalConfig } from './connectors.js';
 
 // Application State
@@ -13,7 +13,9 @@ let state = {
   },
   selectedJobId: null,
   statusChart: null,
-  skillWeights: {}
+  skillWeights: {},
+  simQuestions: [],
+  simIndex: 0
 };
 
 // ==========================================================================
@@ -232,6 +234,17 @@ function setupEventListeners() {
   document.getElementById('btn-copy-template').addEventListener('click', handleCopyTemplate);
   // Character count on template output
   document.getElementById('template-output')?.addEventListener('input', updateCharCount);
+
+  // Email Drafter
+  document.getElementById('btn-generate-email-draft')?.addEventListener('click', handleEmailDraftGenerate);
+  document.getElementById('btn-copy-email-draft')?.addEventListener('click', () => handleCopy('email-draft-output', 'Email draft'));
+
+  // Interview Simulator
+  document.getElementById('btn-sim-submit')?.addEventListener('click', handleSimSubmit);
+  document.getElementById('btn-sim-prev')?.addEventListener('click', handleSimPrev);
+  document.getElementById('btn-sim-next')?.addEventListener('click', handleSimNext);
+  document.getElementById('btn-sim-mic')?.addEventListener('click', handleSimMic);
+  document.getElementById('btn-copy-interview-answer')?.addEventListener('click', () => handleCopy('interview-output', 'Interview answer guideline'));
 
   // Sync tools select switch
   document.getElementById('tools-select-job').addEventListener('change', (e) => {
@@ -1245,6 +1258,8 @@ async function handleCoverLetterGenerate() {
   const outputText = document.getElementById('cover-letter-output');
   const btn = document.getElementById('btn-generate-cover-letter');
   const tone = document.getElementById('cover-letter-tone').value;
+  const length = document.getElementById('cover-letter-length').value;
+  const rewrite = document.getElementById('cover-letter-rewrite').value;
 
   btn.disabled = true;
   placeholder.classList.add('hidden');
@@ -1252,7 +1267,7 @@ async function handleCoverLetterGenerate() {
   wrapper.classList.add('hidden');
 
   try {
-    const text = await generateCoverLetter(state.cv, job, tone, state.apiConfig);
+    const text = await generateCoverLetter(state.cv, job, tone, state.apiConfig, length, rewrite);
     outputText.value = text;
     wrapper.classList.remove('hidden');
   } catch (err) {
@@ -1283,6 +1298,7 @@ async function handleInterviewPrepGenerate() {
     output.innerHTML = parseMarkdown(text);
     output.classList.remove('hidden');
     document.getElementById('interview-actions')?.classList.remove('hidden');
+    initInterviewSimulator(text);
   } catch (err) {
     alert(err.message);
     placeholder.classList.remove('hidden');
@@ -1338,11 +1354,119 @@ async function handleTemplateGenerate() {
 }
 
 function handleCopyTemplate() {
-  const copyText = document.getElementById('template-output');
-  copyText.select();
-  copyText.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(copyText.value);
-  showToast("Message copied to clipboard!");
+  handleCopy('template-output', 'Message');
+}
+
+function handleCopy(elementId, label) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = el.value || el.innerText || '';
+  navigator.clipboard.writeText(text).then(() => showToast(`${label} copied to clipboard!`)).catch(() => showToast('Failed to copy.'));
+}
+
+async function handleEmailDraftGenerate() {
+  const job = state.jobs.find(j => j.id === state.selectedJobId);
+  if (!job) { showToast('Select a job first.'); return; }
+  const btn = document.getElementById('btn-generate-email-draft');
+  const placeholder = document.getElementById('email-draft-placeholder');
+  const loading = document.getElementById('email-draft-loading');
+  const wrapper = document.getElementById('email-draft-wrapper');
+  const output = document.getElementById('email-draft-output');
+  const name = document.getElementById('email-draft-name').value.trim();
+  const email = document.getElementById('email-draft-email').value.trim();
+  const type = document.getElementById('email-draft-type').value;
+  btn.disabled = true;
+  placeholder.classList.add('hidden');
+  loading.classList.remove('hidden');
+  try {
+    const text = await generateEmailDraft(state.cv, job, type, name, email, state.apiConfig);
+    output.value = text;
+    wrapper.classList.remove('hidden');
+  } catch (err) { alert(err.message); placeholder.classList.remove('hidden'); }
+  finally { loading.classList.add('hidden'); btn.disabled = false; }
+}
+
+function parseInterviewQuestions(interviewText) {
+  const questions = [];
+  const lines = interviewText.split('\n');
+  let current = null;
+  for (const line of lines) {
+    const match = line.match(/(?:### |\*\*)?(\d+)\.\s*(?:Technical|Behavioral|Question)?\s*Question[:\s]*(.+)/i) || line.match(/(?:### |\*\*)?(?:\*\*)?(?:Question|Q\.|#)\s*(\d+)[.:\s]+(.+)/i);
+    if (match) {
+      if (current) questions.push(current);
+      current = { question: match[2].trim().replace(/\*\*/g, ''), ideal: '' };
+    } else if (current && /ideal answer/i.test(line)) {
+      current.ideal = line.replace(/.*[Ii]deal\s*[Aa]nswer[:)]*\s*/i, '').trim().replace(/^["*`]+|["*`]+$/g, '');
+    }
+  }
+  if (current) questions.push(current);
+  if (questions.length === 0) {
+    // Fallback: extract any sentence containing "question" or "?"
+    const matches = interviewText.match(/(?:\d+\.\s*[^\n]+|Q:?\s*[^\n]+)/g);
+    if (matches) for (const m of matches.slice(0, 10)) questions.push({ question: m.replace(/^\d+\.\s*|Q:?\s*/g, '').trim(), ideal: 'Provide a specific, quantifiable response based on your experience.' });
+  }
+  return questions.slice(0, 10);
+}
+
+function initInterviewSimulator(interviewText) {
+  state.simQuestions = parseInterviewQuestions(interviewText);
+  state.simIndex = 0;
+  const container = document.getElementById('interview-simulator');
+  if (container) container.classList.remove('hidden');
+  renderSimQuestion();
+}
+
+function renderSimQuestion() {
+  if (!state.simQuestions.length) return;
+  const q = state.simQuestions[state.simIndex];
+  const counter = document.getElementById('sim-question-counter');
+  const text = document.getElementById('sim-question-text');
+  counter.innerText = `Question ${state.simIndex + 1}/${state.simQuestions.length}`;
+  text.innerText = q.question;
+  document.getElementById('sim-user-answer').value = q.userAnswer || '';
+  document.getElementById('sim-grader-feedback').classList.add('hidden');
+  document.getElementById('btn-sim-prev').disabled = state.simIndex === 0;
+}
+
+async function handleSimSubmit() {
+  const q = state.simQuestions[state.simIndex];
+  if (!q) return;
+  const userAnswer = document.getElementById('sim-user-answer').value.trim();
+  if (!userAnswer) { showToast('Type an answer first.'); return; }
+  q.userAnswer = userAnswer;
+  const feedback = document.getElementById('sim-grader-feedback');
+  feedback.classList.remove('hidden');
+  feedback.innerHTML = '<div class="spinner-sm"></div> <span class="text-xs">Grading your answer...</span>';
+  const text = await gradeInterviewAnswer(q.question, userAnswer, state.apiConfig);
+  feedback.innerText = text;
+}
+
+function handleSimPrev() {
+  if (state.simIndex > 0) { state.simIndex--; renderSimQuestion(); }
+}
+
+function handleSimNext() {
+  if (state.simIndex < state.simQuestions.length - 1) { state.simIndex++; renderSimQuestion(); }
+}
+
+function handleSimMic() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { showToast('SpeechRecognition not supported in this browser.'); return; }
+  const status = document.getElementById('sim-mic-status');
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+  status.innerText = '🎤 Listening...';
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    const textarea = document.getElementById('sim-user-answer');
+    textarea.value = (textarea.value ? textarea.value + ' ' : '') + transcript;
+    status.innerText = `Got: "${transcript.substring(0, 40)}..."`;
+  };
+  recognition.onerror = () => { status.innerText = 'Mic error.'; };
+  recognition.onend = () => { if (status.innerText === '🎤 Listening...') status.innerText = ''; };
+  recognition.start();
 }
 
 function updateCharCount() {

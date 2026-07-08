@@ -2126,6 +2126,7 @@ textarea {
 }
 
 @media print {
+  /* Resume */
   .resume-preview {
     background: #fff;
     color: #000;
@@ -2138,4 +2139,33 @@ textarea {
   .resume-preview .resume-section h4 { color: #333; }
   .resume-preview .resume-section p { color: #444; }
   .resume-preview .resume-section li { color: #444; }
+
+  /* Cover Letter */
+  #cover-letter-output {
+    background: #fff !important;
+    color: #000 !important;
+    border: none !important;
+    font-family: Georgia, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.6 !important;
+    padding: 1.5cm !important;
+  }
+
+  /* Interview Guide */
+  #interview-output, #cv-tailor-output {
+    background: #fff !important;
+    color: #000 !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  #interview-output h2, #interview-output h3,
+  #cv-tailor-output h2, #cv-tailor-output h3 {
+    color: #1a56db !important;
+    break-after: avoid;
+  }
+
+  /* Hide nav and non-essential elements */
+  .header, .nav-sidebar, .tool-actions, .btn, button { display: none !important; }
+  body { background: #fff !important; }
+  .card { box-shadow: none !important; border: 1px solid #ddd !important; }
 }
