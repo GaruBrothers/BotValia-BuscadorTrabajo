@@ -1910,6 +1910,65 @@ textarea {
 }
 
 /* ==========================================
+   SKILLS COMPARISON CHART
+   ========================================== */
+#skills-comparison-chart {
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.75rem;
+}
+.comp-bar-legend {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+.legend-item {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.cv-swatch { background: var(--color-primary); }
+.job-swatch { background: var(--color-warning); }
+.comp-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+.comp-bar-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  min-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.comp-bars {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+}
+.comp-bar {
+  height: 14px;
+  border-radius: 3px;
+  font-size: 0.6rem;
+  line-height: 14px;
+  text-align: center;
+  padding: 0 2px;
+  transition: width 0.3s;
+}
+.cv-bar.present { background: hsla(217, 80%, 55%, 0.3); color: var(--color-primary); }
+.cv-bar.missing { background: hsla(0, 0%, 20%, 0.3); color: var(--text-muted); }
+.job-bar.present { background: hsla(38, 90%, 50%, 0.3); color: var(--color-warning); }
+.job-bar.missing { background: hsla(0, 0%, 20%, 0.3); color: var(--text-muted); }
+
+/* ==========================================
    SKILL WEIGHT SLIDERS
    ========================================== */
 .skill-weights-container {

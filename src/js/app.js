@@ -1054,7 +1054,7 @@ async function handleCalculateMatch() {
     localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
     
     // Render Results
-    renderMatchResults(analysis);
+    renderMatchResults(analysis, job);
     renderDashboard();
     
     resultsPanel.classList.remove('hidden');
@@ -1068,7 +1068,7 @@ async function handleCalculateMatch() {
   }
 }
 
-function renderMatchResults(analysis) {
+function renderMatchResults(analysis, job) {
   // Score details
   const scoreBadge = document.getElementById('match-score-badge');
   const fill = document.getElementById('match-progress-fill');
@@ -1077,6 +1077,32 @@ function renderMatchResults(analysis) {
   scoreBadge.innerText = `${analysis.score}%`;
   fill.style.width = `${analysis.score}%`;
   summaryText.innerText = analysis.summary || "";
+
+  // Comparison bars: CV skills vs Job requirements
+  const barsContainer = document.getElementById('skills-comparison-bars');
+  if (barsContainer) {
+    const cvSkills = (state.cv?.skills || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const jobSkills = (job?.description || job?.title || '').toLowerCase();
+    const allSkills = [...new Set([...cvSkills, ...(analysis.gaps || []).map(g => g.replace(/^[^a-zA-Z]+/, '').split(/[^a-zA-Z0-9+#.]+/)[0].toLowerCase())])].filter(Boolean).slice(0, 12);
+    const bars = allSkills.map(skill => {
+      const inCv = cvSkills.some(cs => cs.includes(skill) || skill.includes(cs));
+      const inJob = jobSkills.includes(skill);
+      return `
+        <div class="comp-bar-row">
+          <span class="comp-bar-label">${skill.charAt(0).toUpperCase() + skill.slice(1)}</span>
+          <div class="comp-bars">
+            <div class="comp-bar cv-bar ${inCv ? 'present' : 'missing'}" style="width:${inCv ? '100%' : '20%'}">${inCv ? '✓' : '✗'}</div>
+            <div class="comp-bar job-bar ${inJob ? 'present' : 'missing'}" style="width:${inJob ? '100%' : '20%'}">${inJob ? '✓' : '✗'}</div>
+          </div>
+        </div>`;
+    }).join('');
+    barsContainer.innerHTML = `
+      <div class="comp-bar-legend">
+        <span class="legend-item"><span class="legend-swatch cv-swatch"></span> CV</span>
+        <span class="legend-item"><span class="legend-swatch job-swatch"></span> Job Requires</span>
+      </div>
+      ${bars}`;
+  }
 
   // Lists formatting
   const gapsList = document.getElementById('match-gaps-list');
@@ -1738,7 +1764,7 @@ function renderDashboard() {
       // If already analyzed, trigger rendering results, otherwise prompt action
       const job = state.jobs.find(j => j.id === jobId);
       if (job && job.matchDetails) {
-        renderMatchResults(job.matchDetails);
+        renderMatchResults(job.matchDetails, job);
         document.getElementById('match-results-panel').classList.remove('hidden');
       } else {
         document.getElementById('match-results-panel').classList.add('hidden');
