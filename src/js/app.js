@@ -487,10 +487,22 @@ async function handleScanPortals() {
       btn.addEventListener('click', () => {
         const title = btn.getAttribute('data-title');
         const company = btn.getAttribute('data-company');
-        document.getElementById('job-title').value = title;
-        document.getElementById('job-company').value = company;
-        triggerTabNavigation('jobs');
-        showToast(`Job "${title}" pre-filled. Add details and save.`);
+        const source = btn.getAttribute('data-source');
+        const card = btn.closest('.search-result-card');
+        const snippet = card?.querySelector('.text-xs')?.innerText || '';
+        const jobData = {
+          id: 'job-' + Date.now(),
+          title: title,
+          company: company,
+          url: '',
+          status: 'Interested',
+          description: `Position: ${title}\nCompany: ${company}\nSource: ${source}\n\n${snippet}`
+        };
+        state.jobs.push(jobData);
+        localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
+        renderJobsTab();
+        renderDashboard();
+        showToast(`"${title}" imported to Job Tracker.`);
       });
     });
 
