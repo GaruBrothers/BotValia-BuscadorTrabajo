@@ -1090,3 +1090,240 @@ textarea {
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
+
+/* ==========================================
+   JOB CONNECTORS
+   ========================================== */
+.connectors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.connector-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all var(--transition-fast);
+}
+
+.connector-card:hover {
+  border-color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.connector-card.active {
+  border-color: var(--color-success);
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.connector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.connector-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connector-header h4 i {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.connector-card.active .connector-header h4 i {
+  color: var(--color-success);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--border-color);
+  border-radius: 24px;
+  transition: all var(--transition-fast);
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-primary);
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--color-success);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.connector-status {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.connector-status.active {
+  color: var(--color-success);
+}
+
+.connector-status i {
+  font-size: 0.6rem;
+}
+
+/* Scan Progress */
+.scan-progress-container {
+  display: none;
+  margin-bottom: 1.5rem;
+}
+
+.scan-progress-container.visible {
+  display: block;
+}
+
+.scan-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.scan-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.scan-log {
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-top: 0.75rem;
+}
+
+.scan-log .log-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scan-log .log-entry .log-time {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.scan-log .log-entry .log-ok {
+  color: var(--color-success);
+}
+
+.scan-log .log-entry .log-info {
+  color: var(--color-primary);
+}
+
+.scan-log .log-entry .log-error {
+  color: var(--color-danger);
+}
+
+/* Search Results Cards */
+.search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.search-result-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.search-result-card:hover {
+  border-color: var(--text-muted);
+}
+
+.search-result-card .source-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+  width: fit-content;
+}
+
+.source-linkedin { background: rgba(10, 102, 194, 0.2); color: #0a66c2; }
+.source-indeed { background: rgba(37, 99, 235, 0.2); color: #2164f3; }
+.source-torre { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+.source-computrabajo { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+
+.search-result-card h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.search-result-card .company-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.search-result-card .match-indicator {
+  font-size: 0.75rem;
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.search-result-card .result-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
