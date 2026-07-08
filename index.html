@@ -26,6 +26,7 @@
     <!-- Top Navbar -->
     <header class="app-header">
       <div class="header-logo">
+        <button id="btn-toggle-sidebar" class="icon-btn mr-2"><i class="fa-solid fa-bars"></i></button>
         <div class="logo-icon"><i class="fa-solid fa-robot"></i></div>
         <div class="logo-text">
           <h1>BotValia</h1>
@@ -33,6 +34,9 @@
         </div>
       </div>
       <div class="header-actions">
+        <div id="sync-status" class="sync-badge sync-saved">
+          <i class="fa-solid fa-cloud-arrow-up"></i> <span>All changes saved locally</span>
+        </div>
         <button id="btn-demo-mode" class="btn btn-secondary btn-sm">
           <i class="fa-solid fa-bolt"></i> Load Demo Data
         </button>
@@ -830,8 +834,60 @@
               <div class="kanban-header">
                 <h4><i class="fa-regular fa-circle-xmark"></i> Rejected</h4>
                 <span class="kanban-count" id="count-Rejected">0</span>
+                </div>
               </div>
-              <div class="kanban-cards" id="kanban-Rejected"></div>
+
+              <!-- Subtool: Email Drafter (properly placed) -->
+              <div id="tool-panel-email-drafter" class="tool-panel">
+                <div class="tool-header border-b">
+                  <div>
+                    <h3>Recruiter Email Drafter</h3>
+                    <p class="text-sm text-muted">Compose a professional email to a recruiter for a specific job application.</p>
+                  </div>
+                  <button id="btn-generate-email-draft" class="btn btn-primary">
+                    <i class="fa-solid fa-envelope"></i> Generate Email
+                  </button>
+                </div>
+                <div class="tool-body">
+                  <div class="form-row mb-4" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Recruiter Name</label>
+                      <input type="text" id="email-draft-name" placeholder="e.g. Maria Santos">
+                    </div>
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Recruiter Email</label>
+                      <input type="email" id="email-draft-email" placeholder="maria@company.com">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="text-xs text-muted">Email Type</label>
+                    <select id="email-draft-type">
+                      <option value="introduction">Introduction / Application</option>
+                      <option value="followup">Follow-up after applying</option>
+                      <option value="thankyou">Thank you after interview</option>
+                      <option value="negotiation">Salary negotiation</option>
+                    </select>
+                  </div>
+                  <div id="email-draft-loading" class="spinner-container hidden">
+                    <div class="spinner"></div>
+                    <p>AI is composing your email...</p>
+                  </div>
+                  <div id="email-draft-placeholder" class="empty-state">
+                    <i class="fa-solid fa-pen"></i>
+                    <p>Fill in recruiter details and click "Generate Email".</p>
+                  </div>
+                  <div id="email-draft-wrapper" class="hidden">
+                    <div class="textarea-container">
+                      <textarea id="email-draft-output" rows="12" class="textarea-readonly" readonly></textarea>
+                    </div>
+                    <div class="tool-actions mt-4 flex-row gap-4">
+                      <button id="btn-copy-email-draft" class="btn btn-secondary">
+                        <i class="fa-solid fa-copy"></i> Copy to Clipboard
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1322,17 +1378,52 @@
           </div>
           <div class="form-actions justify-end">
             <button id="btn-dismiss-onboarding" class="btn btn-primary">Get Started</button>
-              <!-- Subtool: Email Drafter -->
-              <div id="tool-panel-email-drafter" class="tool-panel">
-                <div class="tool-header border-b">
-                  <div>
-                    <h3>Recruiter Email Drafter</h3>
-                    <p class="text-sm text-muted">Compose a professional email to a recruiter for a specific job application.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtool: Email Drafter -->
+                <div class="tool-body">
+                  <div class="form-row mb-4" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Recruiter Name</label>
+                      <input type="text" id="email-draft-name" placeholder="e.g. Maria Santos">
+                    </div>
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Recruiter Email</label>
+                      <input type="email" id="email-draft-email" placeholder="maria@company.com">
+                    </div>
                   </div>
-                  <button id="btn-generate-email-draft" class="btn btn-primary">
-                    <i class="fa-solid fa-envelope"></i> Generate Email
-                  </button>
+                  <div class="form-group">
+                    <label class="text-xs text-muted">Email Type</label>
+                    <select id="email-draft-type">
+                      <option value="introduction">Introduction / Application</option>
+                      <option value="followup">Follow-up after applying</option>
+                      <option value="thankyou">Thank you after interview</option>
+                      <option value="negotiation">Salary negotiation</option>
+                    </select>
+                  </div>
+                  <div id="email-draft-loading" class="spinner-container hidden">
+                    <div class="spinner"></div>
+                    <p>AI is composing your email...</p>
+                  </div>
+                  <div id="email-draft-placeholder" class="empty-state">
+                    <i class="fa-solid fa-pen"></i>
+                    <p>Fill in recruiter details and click "Generate Email".</p>
+                  </div>
+                  <div id="email-draft-wrapper" class="hidden">
+                    <div class="textarea-container">
+                      <textarea id="email-draft-output" rows="12" class="textarea-readonly" readonly></textarea>
+                    </div>
+                    <div class="tool-actions mt-4 flex-row gap-4">
+                      <button id="btn-copy-email-draft" class="btn btn-secondary">
+                        <i class="fa-solid fa-copy"></i> Copy to Clipboard
+                      </button>
+                    </div>
+                  </div>
                 </div>
+              </div>
                 <div class="tool-body">
                   <div class="form-row mb-4" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
                     <div class="form-group">

@@ -2632,20 +2632,65 @@ function switchToolPanel(toolName) {
 // ==========================================================================
 // TOAST NOTIFICATIONS
 // ==========================================================================
+const toastQueue = [];
+let toastActive = false;
 function showToast(message) {
+  toastQueue.push(message);
+  processToastQueue();
+}
+function processToastQueue() {
+  if (toastActive || toastQueue.length === 0) return;
+  toastActive = true;
   const toast = document.getElementById('toast');
   const msgSpan = document.getElementById('toast-message');
-
+  const message = toastQueue.shift();
   msgSpan.innerText = message;
   toast.classList.remove('hidden');
-
-  // Clear previous timeouts if click-spamming
-  if (window.toastTimeout) clearTimeout(window.toastTimeout);
-
-  window.toastTimeout = setTimeout(() => {
+  setTimeout(() => {
     toast.classList.add('hidden');
-  }, 3000);
+    toastActive = false;
+    processToastQueue();
+  }, 2500);
 }
+
+// Sidebar toggle
+document.getElementById('btn-toggle-sidebar')?.addEventListener('click', () => {
+  document.querySelector('.app-workspace')?.classList.toggle('sidebar-collapsed');
+});
+
+// Keyboard shortcuts
+const TAB_KEYS = { 1: 'dashboard', 2: 'cv', 3: 'jobs', 4: 'match', 5: 'connectors', 6: 'kanban', 7: 'calendar', 8: 'tools', 9: 'settings' };
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.getElementById('onboarding-modal')?.classList.add('hidden');
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+  }
+  if (e.altKey && TAB_KEYS[e.key]) {
+    e.preventDefault();
+    triggerTabNavigation(TAB_KEYS[e.key]);
+  }
+});
+
+// Sync badge helper function
+function updateSyncBadge(status) {
+  const badge = document.getElementById('sync-status');
+  if (!badge) return;
+  const span = badge.querySelector('span');
+  if (status === 'saving') { badge.classList.remove('sync-saved'); badge.classList.add('syncing'); if (span) span.innerText = 'Saving...'; }
+  else { badge.classList.remove('syncing'); badge.classList.add('sync-saved'); if (span) span.innerText = 'All changes saved locally'; }
+}
+
+// Patch localStorage to show sync state
+let saveTimer = null;
+const _origSet = localStorage.setItem.bind(localStorage);
+localStorage.setItem = function (key, value) {
+  if (key && key.startsWith('botvalia_') && key !== 'botvalia_onboarded') {
+    updateSyncBadge('saving');
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => updateSyncBadge('saved'), 400);
+  }
+  return _origSet(key, value);
+};
 
 // ==========================================================================
 // HELPER METHODS (MARKDOWN PARSER)

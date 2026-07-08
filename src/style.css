@@ -245,12 +245,14 @@ body {
 
 /* Tab Panels */
 .tab-panel {
-  display: none;
+  display: none !important;
   animation: fadeIn var(--transition-normal);
 }
 
 .tab-panel.active {
-  display: block;
+  display: block !important;
+  opacity: 1;
+  animation: fadeIn var(--transition-normal);
 }
 
 @keyframes fadeIn {
@@ -1359,7 +1361,7 @@ textarea {
     backdrop-filter: none !important;
     margin-bottom: 1rem !important;
   }
-  .tab-panel {
+  .tab-panel.active, .tab-panel {
     display: block !important;
   }
   .layout-split,
@@ -1684,6 +1686,68 @@ textarea {
   gap: 0.5rem;
   margin-top: 0.25rem;
 }
+
+/* ==========================================
+   SYNC BADGE / SIDEBAR TOGGLE / KEYBOARD HINTS / ONBOARDING
+   ========================================== */
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  background: hsla(142, 40%, 25%, 0.2);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+.sync-badge.syncing {
+  background: hsla(38, 40%, 30%, 0.2);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.icon-btn:hover { background: var(--bg-card-hover); }
+
+@media (max-width: 768px) {
+  .app-workspace { grid-template-columns: 1fr !important; }
+  .sidebar-nav.collapsed { display: none; }
+  .sidebar-nav { display: block; }
+}
+
+.app-workspace.sidebar-collapsed .sidebar-nav { display: none; }
+
+/* ==========================================
+   SKELETON LOADER
+   ========================================== */
+.skeleton {
+  background: linear-gradient(90deg, hsla(217,40%,15%,0.4) 25%, hsla(217,40%,25%,0.6) 50%, hsla(217,40%,15%,0.4) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  border-radius: 4px;
+  height: 0.8rem;
+}
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+}
+.skeleton-card .skeleton { margin-bottom: 0.4rem; }
 
 /* ==========================================
    BUTTON GROUP
