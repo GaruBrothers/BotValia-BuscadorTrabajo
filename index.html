@@ -170,9 +170,17 @@
             <div class="card col-2">
               <div class="card-header">
                 <h3><i class="fa-solid fa-list-check"></i> Job Matches Overview</h3>
-                <button id="btn-add-job-shortcut" class="btn btn-primary btn-xs">
-                  <i class="fa-solid fa-plus"></i> Add Job
-                </button>
+                <div class="flex gap-1">
+                  <select id="min-match-threshold" class="input-sm" style="font-size:0.7rem">
+                    <option value="0">All Scores</option>
+                    <option value="70">≥ 70% Match</option>
+                    <option value="50">≥ 50% Match</option>
+                    <option value="30">≥ 30% Match</option>
+                  </select>
+                  <button id="btn-add-job-shortcut" class="btn btn-primary btn-xs">
+                    <i class="fa-solid fa-plus"></i> Add Job
+                  </button>
+                </div>
               </div>
               <div class="card-body">
                 <div class="table-container">

@@ -126,6 +126,7 @@ function setupEventListeners() {
     btn.addEventListener('click', () => handleExportResume(btn.dataset.format));
   });
   document.getElementById('cv-skills')?.addEventListener('input', renderSkillTags);
+  document.getElementById('min-match-threshold')?.addEventListener('change', renderDashboard);
 
   // Character counters
   document.querySelectorAll('textarea[data-limit]').forEach(el => {
@@ -422,13 +423,13 @@ function renderCVVersionSelector() {
   });
 }
 
-function addMissingSkill(skillName) {
+function addMissingSkill(skillName, silent) {
   if (!state.cv) { showToast('Save a CV profile first.'); return; }
   const skillsField = document.getElementById('cv-skills');
   if (!skillsField) return;
   const current = skillsField.value.split(',').map(s => s.trim()).filter(Boolean);
   if (current.some(s => s.toLowerCase() === skillName.toLowerCase())) {
-    showToast(`"${skillName}" is already in your skills list.`);
+    if (!silent) showToast(`"${skillName}" is already in your skills list.`);
     return;
   }
   current.push(skillName);
@@ -437,7 +438,7 @@ function addMissingSkill(skillName) {
   localStorage.setItem('botvalia_cv', JSON.stringify(state.cv));
   renderSkillTags();
   renderCVPreview();
-  showToast(`"${skillName}" added to your CV skills.`);
+  if (!silent) showToast(`"${skillName}" added to your CV skills.`);
 }
 
 function handleExportResume(format) {
@@ -1136,6 +1137,7 @@ function renderMatchResults(analysis, job) {
   const strengthsList = document.getElementById('match-strengths-list');
   const tipsList = document.getElementById('match-tips-list');
 
+  const gapSkills = (analysis.gaps || []).map(g => g.replace(/^[^a-zA-Z]+/, '').split(/[^a-zA-Z0-9+#.]+/)[0]).filter(Boolean);
   gapsList.innerHTML = (analysis.gaps || []).map(g => {
     const skillName = g.replace(/^[^a-zA-Z]+/, '').split(/[^a-zA-Z0-9+#.]+/)[0];
     return `<li>${g} <button type="button" class="btn btn-xs btn-outline add-missing-skill" data-skill="${skillName}">+ Add to CV</button></li>`;
@@ -1143,7 +1145,19 @@ function renderMatchResults(analysis, job) {
   gapsList.querySelectorAll('.add-missing-skill').forEach(btn => {
     btn.addEventListener('click', () => addMissingSkill(btn.dataset.skill));
   });
-  strengthsList.innerHTML = (analysis.strengths || []).map(s => `<li>${s}</li>`).join('');
+  if (gapSkills.length > 1) {
+    const gapParent = gapsList.parentElement;
+    const allBtn = document.createElement('div');
+    allBtn.className = 'mt-2';
+    allBtn.innerHTML = `<button type="button" id="btn-add-all-missing" class="btn btn-xs btn-primary"><i class="fa-solid fa-plus"></i> Add all missing keywords to CV</button>`;
+    gapParent.appendChild(allBtn);
+    document.getElementById('btn-add-all-missing')?.addEventListener('click', () => {
+      gapSkills.forEach(skill => addMissingSkill(skill, true));
+      showToast(`${gapSkills.length} skills added to CV.`);
+      allBtn.remove();
+    });
+  }
+  strengthsList.innerHTML = (analysis.strengths || []).map((s, i) => `<li><details class="match-why-detail" ${i === 0 ? 'open' : ''}><summary>${s}</summary><p class="text-xs text-muted mt-1">This strength was identified because your CV contains keywords and experience that align with this requirement. Highlighting this in your application can increase recruiter confidence.</p></details></li>`).join('');
   tipsList.innerHTML = (analysis.tips || []).map(t => `<li>${t}</li>`).join('');
 }
 
@@ -1752,11 +1766,18 @@ function renderDashboard() {
     return;
   }
 
-  tableBody.innerHTML = state.jobs.map(job => {
+  const minThreshold = parseInt(document.getElementById('min-match-threshold')?.value || '0');
+  const filteredJobs = minThreshold > 0 ? state.jobs.filter(j => (j.matchScore || 0) >= minThreshold) : state.jobs;
+
+  if (filteredJobs.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="5" class="table-empty"><p class="text-muted text-xs">No jobs match the selected threshold.</p></td></tr>`;
+    return;
+  }
+  tableBody.innerHTML = filteredJobs.map(job => {
     let scoreDisplay = '<span class="text-muted">Not Analyzed</span>';
     if (job.matchScore !== undefined) {
-      const level = job.matchScore > 80 ? 'badge-success' : job.matchScore > 50 ? 'badge-warning' : 'badge-danger';
-      scoreDisplay = `<span class="badge ${level}">${job.matchScore}% Match</span>`;
+      const level = job.matchScore > 80 ? 'var(--color-success)' : job.matchScore > 50 ? 'var(--color-warning)' : 'var(--color-danger)';
+      scoreDisplay = `<div class="dash-score-bar"><div class="dash-score-fill" style="width:${job.matchScore}%;background:${level};border-radius:4px;height:6px"></div></div><span class="dash-score-text">${job.matchScore}%</span>`;
     }
 
     const statusLevel = job.status === 'Offer' ? 'badge-success' : job.status === 'Rejected' ? 'badge-danger' : job.status === 'Interviewing' ? 'badge-primary' : 'badge-secondary';

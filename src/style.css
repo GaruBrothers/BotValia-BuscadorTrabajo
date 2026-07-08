@@ -1969,6 +1969,39 @@ textarea {
 .job-bar.missing { background: hsla(0, 0%, 20%, 0.3); color: var(--text-muted); }
 
 /* ==========================================
+   DASHBOARD SCORE BAR
+   ========================================== */
+.dash-score-bar {
+  width: 60px;
+  background: var(--border-color);
+  border-radius: 4px;
+  height: 6px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+}
+.dash-score-fill {
+  height: 6px;
+  border-radius: 4px;
+  transition: width 0.4s;
+}
+.dash-score-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.match-why-detail {
+  font-size: 0.82rem;
+}
+.match-why-detail summary {
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.match-why-detail p {
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--border-color);
+}
+
+/* ==========================================
    SKILL WEIGHT SLIDERS
    ========================================== */
 .skill-weights-container {
