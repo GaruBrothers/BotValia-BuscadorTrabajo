@@ -1224,6 +1224,52 @@ function renderSkillTags() {
   });
 }
 
+function renderSkillsCloud() {
+  const container = document.getElementById('cv-skills-cloud-body');
+  if (!container) return;
+  if (!state.cv || !state.cv.title) {
+    container.innerHTML = '<p class="text-muted text-xs">Save a CV profile with a title to see suggested skills.</p>';
+    return;
+  }
+
+  const title = state.cv.title.toLowerCase();
+  const demandSkills = {
+    'frontend|react|vue|angular|ui|ux|web': ['TypeScript', 'React', 'Next.js', 'CSS/Sass', 'Tailwind CSS', 'GraphQL', 'Jest', 'Storybook', 'Webpack/Vite', 'Accessibility (a11y)'],
+    'backend|node|express|api|server': ['Node.js', 'TypeScript', 'PostgreSQL', 'Redis', 'Docker', 'GraphQL', 'AWS Lambda', 'MongoDB', 'CI/CD', 'Microservices'],
+    'fullstack|full.?stack|javascript|developer': ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Docker', 'AWS', 'GraphQL', 'Next.js', 'Git', 'CI/CD'],
+    'devops|cloud|sre|infra|platform': ['Docker', 'Kubernetes', 'AWS', 'Terraform', 'CI/CD (GitHub Actions)', 'Linux', 'Python', 'Prometheus', 'Helm', 'Ansible'],
+    'data|analyst|scientist|ml|ai': ['Python', 'SQL', 'Pandas', 'TensorFlow/PyTorch', 'Apache Spark', 'AWS SageMaker', 'Tableau', 'Airflow', 'Scikit-learn', 'Docker'],
+    'mobile|ios|android|react.?native|flutter': ['React Native', 'TypeScript', 'Swift', 'Kotlin', 'Firebase', 'GraphQL', 'Jest', 'Fastlane', 'Xcode', 'Android Studio'],
+    'java|spring|enterprise': ['Java', 'Spring Boot', 'PostgreSQL', 'Docker', 'Kubernetes', 'Kafka', 'Maven/Gradle', 'AWS', 'JUnit', 'Microservices'],
+    'python|django|flask': ['Python', 'Django', 'PostgreSQL', 'Docker', 'AWS', 'Redis', 'Celery', 'REST APIs', 'Git', 'CI/CD']
+  };
+
+  let suggested = [];
+  const titleLower = state.cv.title.toLowerCase();
+  for (const [key, skills] of Object.entries(demandSkills)) {
+    const patterns = key.split('|');
+    if (patterns.some(p => titleLower.includes(p))) {
+      suggested = skills;
+      break;
+    }
+  }
+  if (suggested.length === 0) suggested = demandSkills['fullstack|full.?stack|javascript|developer'];
+
+  const existingSkills = (state.cv.skills || '').toLowerCase();
+  const cloud = suggested.map(skill => {
+    const isOwned = existingSkills.includes(skill.toLowerCase());
+    return `<span class="badge ${isOwned ? 'badge-success' : 'badge-outline'} skills-cloud-item" title="${isOwned ? 'Already in your CV' : 'High-demand skill — consider adding'}">${skill} ${isOwned ? '✓' : '+'}</span>`;
+  }).join(' ');
+
+  container.innerHTML = `
+    <p class="text-xs text-muted mb-1">Based on your title: <strong>${state.cv.title}</strong></p>
+    <div class="skills-cloud-items">${cloud}</div>
+    <div class="alert alert-info mt-2">
+      <i class="fa-solid fa-lightbulb"></i>
+      <span class="text-xs">High-demand skills for your target role. Green = already in your CV.</span>
+    </div>`;
+}
+
 function renderCVDetails() {
   const fullName = document.getElementById('cv-full-name');
   const title = document.getElementById('cv-title');
@@ -1278,6 +1324,7 @@ function renderCVDetails() {
   }
   renderCVPreview();
   renderSkillTags();
+  renderSkillsCloud();
 }
 
 function renderCVPreview() {
