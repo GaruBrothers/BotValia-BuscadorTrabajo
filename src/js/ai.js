@@ -184,6 +184,119 @@ export async function generateSearchQuery(cv, apiConfig) {
   }
 }
 
+/**
+ * Generates a customized outreach/communication message based on template type.
+ * Types: cold-linkedin, follow-up, resignation, counter-offer
+ */
+export async function generateMessage(cv, job, templateType, contactName, contactEmail, apiConfig) {
+  const prompts = {
+    'cold-linkedin': `You are an expert career coach. Write a professional, concise LinkedIn message (max 300 characters) from:
+Candidate: ${cv.fullName} (${cv.title})
+Skills: ${cv.skills}
+To a recruiter${contactName ? ' named ' + contactName : ''}${contactEmail ? ' (email: ' + contactEmail + ')' : ''}
+About the ${job ? 'role: ' + job.title + ' at ' + job.company : 'job opportunity'}
+The message should: Introduce the candidate, mention relevant skills matching the role, express interest, and suggest a brief chat. Be warm but professional. Include a call to action.`,
+
+    'follow-up': `You are a professional job seeker. Write a polite interview follow-up email from:
+Candidate: ${cv.fullName} (${cv.title})
+After interviewing for: ${job ? job.title + ' at ' + job.company : 'a position'}
+To ${contactName || 'the hiring manager'}${contactEmail ? ' (' + contactEmail + ')' : ''}
+The email should: Thank them for their time, reiterate interest in the role, highlight 1-2 relevant strengths, and ask about next steps politely.`,
+
+    'resignation': `You are a professional employee. Write a respectful resignation letter for:
+Employee: ${cv.fullName} (${cv.title})
+Current company: ${job ? job.company : 'your current company'}
+The letter should: State the resignation, express gratitude for opportunities, offer to help with transition, specify a professional notice period (2 weeks).`,
+
+    'counter-offer': `You are a professional negotiating a job offer. Write a polite counter-offer email from:
+Candidate: ${cv.fullName} (${cv.title})
+Regarding offer from: ${job ? job.company : 'the company'}
+To ${contactName || 'the recruiter'}${contactEmail ? ' (' + contactEmail + ')' : ''}
+The email should: Thank them for the offer, express enthusiasm for the role, respectfully negotiate the salary or benefits (mention specific numbers or percentages if needed), and remain open to discussion.`
+  };
+
+  const prompt = prompts[templateType] || prompts['cold-linkedin'];
+
+  if (apiConfig.provider === 'mock') {
+    return simulateMessage(cv, job, templateType, contactName);
+  }
+
+  try {
+    return await makeAICall(prompt, apiConfig);
+  } catch (error) {
+    console.error("AI Error:", error);
+    throw new Error("Failed to generate message: " + error.message);
+  }
+}
+
+function simulateMessage(cv, job, templateType, contactName) {
+  const contact = contactName || 'Hiring Manager';
+  const company = job ? job.company : 'your company';
+  const role = job ? job.title : 'the position';
+  const name = cv.fullName;
+
+  const messages = {
+    'cold-linkedin': `Hi ${contact},
+
+I hope this message finds you well! My name is ${name}, a ${cv.title} with strong expertise in ${cv.skills.split(',').slice(0, 3).join(', ')}.
+
+I came across the ${role} role at ${company} and was impressed by the company's innovative work. My background in fullstack development and cloud architecture aligns well with what you're looking for.
+
+I'd love to connect and briefly discuss how my experience could add value to your team. Would you be open to a quick chat this week?
+
+Best regards,
+${name}`,
+
+    'follow-up': `Subject: Follow-Up - ${role} Interview
+
+Dear ${contact},
+
+Thank you so much for the opportunity to interview for the ${role} position at ${company} earlier this week. I truly enjoyed learning more about the team and the exciting projects ahead.
+
+After our conversation, I'm even more convinced that my experience in ${cv.skills.split(',').slice(0, 2).join(' and ')} would allow me to make an immediate impact.
+
+I remain very enthusiastic about the opportunity and would appreciate any updates on the next steps. Please don't hesitate to reach out if you need any additional information.
+
+Thank you again for your time and consideration.
+
+Warm regards,
+${name}
+${cv.title}`,
+
+    'resignation': `Subject: Resignation - ${name}
+
+Dear Team,
+
+Please accept this letter as formal notification that I am resigning from my position as ${cv.title} at ${company}. My last day will be two weeks from today.
+
+I want to express my sincere gratitude for the opportunities I've had during my time here. I've learned immensely and am proud of what we've accomplished together.
+
+I am committed to ensuring a smooth transition and will do everything possible to hand over my responsibilities effectively.
+
+Thank you for your understanding and support.
+
+Sincerely,
+${name}`,
+
+    'counter-offer': `Subject: Offer Discussion - ${role}
+
+Dear ${contact},
+
+Thank you so much for extending the offer for the ${role} position at ${company}. I'm truly excited about the opportunity to join the team and contribute to your ongoing success.
+
+After careful consideration, I would like to discuss the compensation package. Based on my experience in ${cv.skills.split(',').slice(0, 2).join(' and ')}, my market research, and the value I believe I can bring, I was hoping we could explore a ${'\u00B4'}10-15% adjustment to the base salary.
+
+I remain very enthusiastic about this role and am confident we can find a mutually agreeable solution. I'm happy to discuss this further at your convenience.
+
+Thank you again for this opportunity.
+
+Best regards,
+${name}`
+  };
+
+  return messages[templateType] || messages['cold-linkedin'];
+}
+
 function simulateSearchQuery(cv) {
   const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
   const title = cv.title || 'Software Developer';

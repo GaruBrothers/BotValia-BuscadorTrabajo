@@ -1,5 +1,5 @@
 import { defaultCV, defaultJobs } from './data.js';
-import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep } from './ai.js';
+import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep, generateMessage } from './ai.js';
 import { buildPortalUrl, simulatePortalSearch, getAllPortalKeys, getPortalConfig } from './connectors.js';
 
 // Application State
@@ -169,6 +169,10 @@ function setupEventListeners() {
   document.getElementById('btn-generate-cover-letter').addEventListener('click', handleCoverLetterGenerate);
   document.getElementById('btn-generate-interview').addEventListener('click', handleInterviewPrepGenerate);
   document.getElementById('btn-copy-cover-letter').addEventListener('click', handleCopyCoverLetter);
+  document.getElementById('btn-generate-template').addEventListener('click', handleTemplateGenerate);
+  document.getElementById('btn-copy-template').addEventListener('click', handleCopyTemplate);
+  // Character count on template output
+  document.getElementById('template-output')?.addEventListener('input', updateCharCount);
 
   // Sync tools select switch
   document.getElementById('tools-select-job').addEventListener('change', (e) => {
@@ -819,6 +823,66 @@ function handleCopyCoverLetter() {
   showToast("Cover letter copied to clipboard!");
 }
 
+// ==========================================================================
+// MESSAGE TEMPLATES
+// ==========================================================================
+async function handleTemplateGenerate() {
+  const templateType = document.getElementById('template-type').value;
+  const contactName = document.getElementById('template-contact-name').value.trim();
+  const contactEmail = document.getElementById('template-contact-email').value.trim();
+  const placeholder = document.getElementById('template-placeholder');
+  const loading = document.getElementById('template-loading');
+  const wrapper = document.getElementById('template-wrapper');
+  const output = document.getElementById('template-output');
+  const btn = document.getElementById('btn-generate-template');
+
+  const job = getSelectedToolJob();
+  if (!job) {
+    if (!confirm('No job selected. Generate a general message without job context?')) return;
+  }
+
+  btn.disabled = true;
+  placeholder.classList.add('hidden');
+  loading.classList.remove('hidden');
+  wrapper.classList.add('hidden');
+
+  try {
+    const text = await generateMessage(state.cv, job, templateType, contactName, contactEmail, state.apiConfig);
+    output.value = text;
+    wrapper.classList.remove('hidden');
+    updateCharCount();
+  } catch (err) {
+    alert(err.message);
+    placeholder.classList.remove('hidden');
+  } finally {
+    loading.classList.add('hidden');
+    btn.disabled = false;
+  }
+}
+
+function handleCopyTemplate() {
+  const copyText = document.getElementById('template-output');
+  copyText.select();
+  copyText.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(copyText.value);
+  showToast("Message copied to clipboard!");
+}
+
+function updateCharCount() {
+  const output = document.getElementById('template-output');
+  const count = output?.value?.length || 0;
+  const charCount = document.getElementById('char-count');
+  const warning = document.getElementById('char-warning');
+  if (charCount) charCount.innerText = `${count} characters`;
+  if (warning) {
+    if (count > 300) {
+      warning.innerText = '⚠ LinkedIn limit: 300 chars';
+    } else if (count > 0) {
+      warning.innerText = '';
+    }
+  }
+}
+
 function getSelectedToolJob() {
   if (!state.selectedJobId) {
     alert("Please select a job first.");
@@ -964,6 +1028,9 @@ function renderJobsTab() {
           <button class="btn btn-secondary btn-xs btn-edit-job" data-id="${job.id}">
             <i class="fa-solid fa-pen"></i>
           </button>
+          <button class="btn btn-secondary btn-xs btn-draft-outreach" data-id="${job.id}" title="Draft outreach message">
+            <i class="fa-solid fa-message"></i>
+          </button>
           <button class="btn btn-danger-outline btn-xs btn-delete-job" data-id="${job.id}">
             <i class="fa-solid fa-trash"></i>
           </button>
@@ -979,6 +1046,18 @@ function renderJobsTab() {
 
   container.querySelectorAll('.btn-delete-job').forEach(btn => {
     btn.addEventListener('click', () => handleJobDelete(btn.getAttribute('data-id')));
+  });
+
+  container.querySelectorAll('.btn-draft-outreach').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const jobId = btn.getAttribute('data-id');
+      state.selectedJobId = jobId;
+      syncToolsSelectedJob();
+      triggerTabNavigation('tools');
+      switchToolPanel('message-templates');
+      // Pre-select cold-linkedin template
+      document.getElementById('template-type').value = 'cold-linkedin';
+    });
   });
 }
 

@@ -754,6 +754,9 @@
               <button class="tool-tab-btn" data-tool="interview-prep">
                 <i class="fa-solid fa-user-tie"></i> Interview Preparation
               </button>
+              <button class="tool-tab-btn" data-tool="message-templates">
+                <i class="fa-solid fa-message"></i> Message Templates
+              </button>
             </div>
 
             <!-- Tools Output Panels -->
@@ -855,6 +858,62 @@
                 </div>
               </div>
 
+              <!-- Subtool: Message Templates -->
+              <div id="tool-panel-message-templates" class="tool-panel">
+                <div class="tool-header border-b">
+                  <div>
+                    <h3>Message Templates</h3>
+                    <p class="text-sm text-muted">Generate customized outreach messages for your job applications.</p>
+                  </div>
+                  <div class="flex-row items-center gap-4">
+                    <select id="template-type" class="select-inline" style="min-width:200px">
+                      <option value="cold-linkedin">Cold LinkedIn Message</option>
+                      <option value="follow-up">Interview Follow-Up Email</option>
+                      <option value="resignation">Resignation Letter</option>
+                      <option value="counter-offer">Counter-Offer Email</option>
+                    </select>
+                    <button id="btn-generate-template" class="btn btn-primary">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Generate
+                    </button>
+                  </div>
+                </div>
+                <div class="tool-body">
+                  <div class="form-row mb-4" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Recruiter/Contact Name</label>
+                      <input type="text" id="template-contact-name" placeholder="e.g. Sarah Johnson">
+                    </div>
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Recruiter Email (optional)</label>
+                      <input type="email" id="template-contact-email" placeholder="e.g. sarah@company.com">
+                    </div>
+                  </div>
+                  <div id="template-loading" class="spinner-container hidden">
+                    <div class="spinner"></div>
+                    <p>AI is writing your message...</p>
+                  </div>
+                  <div id="template-placeholder" class="empty-state">
+                    <i class="fa-solid fa-pen"></i>
+                    <p>Select a template type, fill in optional contact details, and click "Generate".</p>
+                  </div>
+                  <div id="template-wrapper" class="hidden">
+                    <div class="textarea-container">
+                      <textarea id="template-output" rows="14" class="textarea-readonly" readonly></textarea>
+                    </div>
+                    <div class="tool-actions mt-4 flex-row items-center justify-between">
+                      <div>
+                        <span id="char-count" class="text-xs text-muted">0 characters</span>
+                        <span id="char-warning" class="text-xs" style="color:var(--color-warning);margin-left:0.5rem"></span>
+                      </div>
+                      <div class="flex-row gap-4">
+                        <button id="btn-copy-template" class="btn btn-secondary">
+                          <i class="fa-solid fa-copy"></i> Copy to Clipboard
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
