@@ -179,6 +179,9 @@ function setupEventListeners() {
     }
   });
 
+  // Scan Portals Button
+  document.getElementById('btn-scan-portals').addEventListener('click', handleScanPortals);
+
   // Connector Toggle Switches
   document.querySelectorAll('.connector-toggle').forEach(toggle => {
     toggle.addEventListener('change', (e) => {
@@ -347,6 +350,129 @@ function loadScript(src) {
     script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
     document.head.appendChild(script);
   });
+}
+
+// ==========================================================================
+// PORTAL SCANNING
+// ==========================================================================
+async function handleScanPortals() {
+  const activePortals = [];
+  document.querySelectorAll('.connector-toggle:checked').forEach(cb => {
+    activePortals.push(cb.getAttribute('data-portal'));
+  });
+
+  if (activePortals.length === 0) {
+    showToast('Please enable at least one portal connector before scanning.');
+    return;
+  }
+
+  if (!state.cv) {
+    showToast('Please set up your CV profile first before scanning portals.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-scan-portals');
+  const progressContainer = document.getElementById('scan-progress-container');
+  const progressFill = document.getElementById('scan-progress-fill');
+  const scanStatus = document.getElementById('scan-status-text');
+  const scanPercent = document.getElementById('scan-percent');
+  const scanLog = document.getElementById('scan-log');
+  const resultsPanel = document.getElementById('connector-results-panel');
+  const resultsGrid = document.getElementById('search-results-grid');
+  const resultsCount = document.getElementById('results-count');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanning...';
+  progressContainer.classList.add('visible');
+  scanLog.innerHTML = '';
+  resultsPanel.classList.add('hidden');
+  resultsGrid.innerHTML = '';
+
+  const allResults = [];
+  const desiredRole = document.querySelector('.connector-query[data-portal="linkedin"]')?.value || '';
+
+  for (let i = 0; i < activePortals.length; i++) {
+    const portal = activePortals[i];
+    const percent = Math.round(((i + 1) / activePortals.length) * 100);
+    const config = getPortalConfig(portal);
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+
+    scanStatus.innerText = `Scanning ${config?.name || portal}...`;
+    scanPercent.innerText = `${percent}%`;
+    progressFill.style.width = `${percent}%`;
+
+    const time = new Date().toLocaleTimeString();
+    logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-info">${config?.name || portal}: Searching...</span>`;
+    scanLog.appendChild(logEntry);
+    scanLog.scrollTop = scanLog.scrollHeight;
+
+    // Simulate network delay
+    await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+
+    try {
+      let results = simulatePortalSearch(portal, state.cv, desiredRole, 3);
+      results.forEach(r => {
+        r.source = portal;
+        allResults.push(r);
+      });
+
+      const okEntry = document.createElement('div');
+      okEntry.className = 'log-entry';
+      okEntry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-ok">✓ ${config?.name || portal}: ${results.length} jobs found</span>`;
+      scanLog.appendChild(okEntry);
+    } catch (err) {
+      const errEntry = document.createElement('div');
+      errEntry.className = 'log-entry';
+      errEntry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-error">✗ ${config?.name || portal}: Error - ${err.message}</span>`;
+      scanLog.appendChild(errEntry);
+    }
+    scanLog.scrollTop = scanLog.scrollHeight;
+  }
+
+  scanStatus.innerText = 'Scan complete!';
+  scanPercent.innerText = '100%';
+  progressFill.style.width = '100%';
+
+  // Render results
+  if (allResults.length > 0) {
+    resultsCount.innerText = `${allResults.length} jobs found`;
+    resultsGrid.innerHTML = allResults.map(job => {
+      const sourceClass = `source-${job.source}`;
+      const sourceNames = { linkedin: 'LinkedIn', indeed: 'Indeed', torre: 'Torre.co', computrabajo: 'Computrabajo' };
+      return `
+        <div class="search-result-card">
+          <span class="source-badge ${sourceClass}">${sourceNames[job.source] || job.source}</span>
+          <h4>${job.title}</h4>
+          <span class="company-name">${job.company} · ${job.location}</span>
+          <span class="match-indicator"><i class="fa-solid fa-circle-check"></i> ${job.matchScore}% Match</span>
+          <p class="text-xs text-muted">${job.snippet}</p>
+          <div class="result-actions">
+            <button class="btn btn-primary btn-xs btn-import-result" data-title="${job.title}" data-company="${job.company}" data-source="${job.source}">
+              <i class="fa-solid fa-plus"></i> Import
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Bind import buttons
+    resultsGrid.querySelectorAll('.btn-import-result').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const title = btn.getAttribute('data-title');
+        const company = btn.getAttribute('data-company');
+        document.getElementById('job-title').value = title;
+        document.getElementById('job-company').value = company;
+        triggerTabNavigation('jobs');
+        showToast(`Job "${title}" pre-filled. Add details and save.`);
+      });
+    });
+
+    resultsPanel.classList.remove('hidden');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-play"></i> Scan Active Portals';
 }
 
 function handleJobSubmit(e) {
