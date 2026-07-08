@@ -178,6 +178,22 @@ function setupEventListeners() {
     }
   });
 
+  // Connector Toggle Switches
+  document.querySelectorAll('.connector-toggle').forEach(toggle => {
+    toggle.addEventListener('change', (e) => {
+      const portal = e.target.getAttribute('data-portal');
+      const card = e.target.closest('.connector-card');
+      const statusEl = document.getElementById(`status-${portal}`);
+      if (e.target.checked) {
+        card.classList.add('active');
+        statusEl.innerHTML = '<i class="fa-solid fa-circle text-green"></i> Active';
+      } else {
+        card.classList.remove('active');
+        statusEl.innerHTML = '<i class="fa-solid fa-circle"></i> Disabled';
+      }
+    });
+  });
+
   // File Upload for CV
   setupFileUpload();
 }

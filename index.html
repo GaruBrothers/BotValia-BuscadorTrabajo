@@ -447,9 +447,101 @@
                 <i class="fa-solid fa-shield-halved"></i>
                 <p>Connectors generate search queries based on your CV skills and profile. Results are simulated locally. No external API keys required.</p>
               </div>
-              <div id="connectors-placeholder" class="empty-state">
-                <i class="fa-solid fa-plug-circle-check"></i>
-                <p>Portal connectors will be configured here in upcoming updates.</p>
+              <div class="connectors-grid" id="connectors-grid">
+                <!-- LinkedIn -->
+                <div class="connector-card" data-portal="linkedin">
+                  <div class="connector-header">
+                    <h4><i class="fa-brands fa-linkedin"></i> LinkedIn</h4>
+                    <label class="toggle-switch">
+                      <input type="checkbox" class="connector-toggle" data-portal="linkedin">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="connector-status" id="status-linkedin">
+                    <i class="fa-solid fa-circle"></i> Disabled
+                  </div>
+                  <div class="form-group">
+                    <label class="text-xs text-muted">Search Query Override (optional)</label>
+                    <input type="text" class="connector-query" data-portal="linkedin" placeholder="e.g. Senior React Developer">
+                  </div>
+                </div>
+                <!-- Indeed -->
+                <div class="connector-card" data-portal="indeed">
+                  <div class="connector-header">
+                    <h4><i class="fa-solid fa-briefcase"></i> Indeed</h4>
+                    <label class="toggle-switch">
+                      <input type="checkbox" class="connector-toggle" data-portal="indeed">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="connector-status" id="status-indeed">
+                    <i class="fa-solid fa-circle"></i> Disabled
+                  </div>
+                  <div class="form-group">
+                    <label class="text-xs text-muted">Search Query Override (optional)</label>
+                    <input type="text" class="connector-query" data-portal="indeed" placeholder="e.g. Fullstack Developer">
+                  </div>
+                </div>
+                <!-- Torre -->
+                <div class="connector-card" data-portal="torre">
+                  <div class="connector-header">
+                    <h4><i class="fa-solid fa-meteor"></i> Torre.co</h4>
+                    <label class="toggle-switch">
+                      <input type="checkbox" class="connector-toggle" data-portal="torre">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="connector-status" id="status-torre">
+                    <i class="fa-solid fa-circle"></i> Disabled
+                  </div>
+                  <div class="form-group">
+                    <label class="text-xs text-muted">Search Query Override (optional)</label>
+                    <input type="text" class="connector-query" data-portal="torre" placeholder="e.g. Software Engineer">
+                  </div>
+                </div>
+                <!-- Computrabajo -->
+                <div class="connector-card" data-portal="computrabajo">
+                  <div class="connector-header">
+                    <h4><i class="fa-solid fa-globe"></i> Computrabajo</h4>
+                    <label class="toggle-switch">
+                      <input type="checkbox" class="connector-toggle" data-portal="computrabajo">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="connector-status" id="status-computrabajo">
+                    <i class="fa-solid fa-circle"></i> Disabled
+                  </div>
+                  <div class="form-group">
+                    <label class="text-xs text-muted">Search Query Override (optional)</label>
+                    <input type="text" class="connector-query" data-portal="computrabajo" placeholder="e.g. Desarrollador Fullstack">
+                  </div>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button id="btn-scan-portals" class="btn btn-primary">
+                  <i class="fa-solid fa-play"></i> Scan Active Portals
+                </button>
+              </div>
+              <!-- Scan Progress -->
+              <div class="scan-progress-container" id="scan-progress-container">
+                <div class="flex-row items-center justify-between">
+                  <span class="text-sm text-muted" id="scan-status-text">Scanning...</span>
+                  <span class="text-xs text-muted" id="scan-percent">0%</span>
+                </div>
+                <div class="scan-progress-bar">
+                  <div class="scan-progress-fill" id="scan-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="scan-log" id="scan-log"></div>
+              </div>
+              <!-- Search Results -->
+              <div class="card mt-6 hidden" id="connector-results-panel">
+                <div class="card-header">
+                  <h3><i class="fa-solid fa-list"></i> Search Results</h3>
+                  <span class="text-sm text-muted" id="results-count">0 jobs found</span>
+                </div>
+                <div class="card-body">
+                  <div class="search-results-grid" id="search-results-grid"></div>
+                </div>
               </div>
             </div>
           </div>
