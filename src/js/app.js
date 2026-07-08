@@ -522,13 +522,19 @@ async function handleScanPortals() {
 function handleJobSubmit(e) {
   e.preventDefault();
   const jobId = document.getElementById('job-id').value;
+  const interviewDate = document.getElementById('job-interview-date').value;
+  const interviewTime = document.getElementById('job-interview-time').value;
+  const interviewNotes = document.getElementById('job-interview-notes').value.trim();
   const jobData = {
     id: jobId || 'job-' + Date.now(),
     title: document.getElementById('job-title').value.trim(),
     company: document.getElementById('job-company').value.trim(),
     url: document.getElementById('job-url').value.trim(),
     status: document.getElementById('job-status').value,
-    description: document.getElementById('job-description').value.trim()
+    description: document.getElementById('job-description').value.trim(),
+    interviewDate: interviewDate || null,
+    interviewTime: interviewTime || null,
+    interviewNotes: interviewNotes || null
   };
 
   if (jobId) {
@@ -566,6 +572,9 @@ function handleJobEdit(jobId) {
   document.getElementById('job-url').value = job.url || '';
   document.getElementById('job-status').value = job.status;
   document.getElementById('job-description').value = job.description;
+  document.getElementById('job-interview-date').value = job.interviewDate || '';
+  document.getElementById('job-interview-time').value = job.interviewTime || '';
+  document.getElementById('job-interview-notes').value = job.interviewNotes || '';
 
   document.getElementById('job-form-title').innerHTML = '<i class="fa-solid fa-edit"></i> Edit Job Offer';
   document.getElementById('btn-save-job').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
