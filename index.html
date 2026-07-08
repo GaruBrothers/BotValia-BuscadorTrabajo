@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BotValia Buscador - AI Job Matcher & Resume Optimizer</title>
+  <meta name="description" content="An open-source, serverless AI job search helper. Analyze job offers, calculate CV match scores, tailor your resume, and generate cover letters securely.">
+  <link rel="stylesheet" href="/src/style.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Background Decorative Orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- App Wrapper -->
+  <div class="app-container">
+    
+    <!-- Top Navbar -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon"><i class="fa-solid fa-robot"></i></div>
+        <div class="logo-text">
+          <h1>BotValia</h1>
+          <span>Buscador de Trabajo</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-demo-mode" class="btn btn-secondary btn-sm">
+          <i class="fa-solid fa-bolt"></i> Load Demo Data
+        </button>
+        <div id="api-status-indicator" class="api-status status-warning">
+          <i class="fa-solid fa-triangle-exclamation"></i> Mock AI Mode Active
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <div class="app-workspace">
+      
+      <!-- Left Sidebar Navigation -->
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <button id="nav-dashboard" class="nav-item active" data-tab="dashboard">
+              <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
+            </button>
+          </li>
+          <li>
+            <button id="nav-cv" class="nav-item" data-tab="cv">
+              <i class="fa-solid fa-file-invoice"></i> <span>My CV Profile</span>
+            </button>
+          </li>
+          <li>
+            <button id="nav-jobs" class="nav-item" data-tab="jobs">
+              <i class="fa-solid fa-briefcase"></i> <span>Job Tracker</span>
+            </button>
+          </li>
+          <li>
+            <button id="nav-match" class="nav-item" data-tab="match">
+              <i class="fa-solid fa-gauge-high"></i> <span>AI Match Center</span>
+            </button>
+          </li>
+          <li>
+            <button id="nav-tools" class="nav-item" data-tab="tools">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Optimizer Tools</span>
+            </button>
+          </li>
+          <li>
+            <button id="nav-settings" class="nav-item" data-tab="settings">
+              <i class="fa-solid fa-gear"></i> <span>API Settings</span>
+            </button>
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <a href="https://github.com/JaisonVelasco/BOTVALIA" target="_blank" class="github-link">
+            <i class="fa-brands fa-github"></i> Open Source Project
+          </a>
+        </div>
+      </nav>
+
+      <!-- Central Content Area -->
+      <main class="content-viewport">
+
+        <!-- TAB: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-panel active">
+          <div class="section-header">
+            <h2>Search Dashboard</h2>
+            <p>Track your job search progress, CV compatibility, and application tasks in one workspace.</p>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon icon-blue"><i class="fa-solid fa-briefcase"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-total-jobs">0</span>
+                <span class="stat-label">Jobs Tracked</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon icon-green"><i class="fa-solid fa-gauge-high"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-avg-match">0%</span>
+                <span class="stat-label">Highest Match</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon icon-purple"><i class="fa-solid fa-file-shield"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-cv-status">Not Set</span>
+                <span class="stat-label">CV Profile Status</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity and Quick Match -->
+          <div class="dashboard-grid">
+            <!-- Job List Summary -->
+            <div class="card col-2">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-list-check"></i> Job Matches Overview</h3>
+                <button id="btn-add-job-shortcut" class="btn btn-primary btn-xs">
+                  <i class="fa-solid fa-plus"></i> Add Job
+                </button>
+              </div>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="dashboard-jobs-table">
+                    <thead>
+                      <tr>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Compatibility</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="5" class="table-empty">
+                          <i class="fa-regular fa-folder-open"></i>
+                          <p>No jobs added yet. Use the Job Tracker to add job postings, or click <strong>Load Demo Data</strong> above to explore.</p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Summary Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-id-card"></i> CV Summary</h3>
+              </div>
+              <div class="card-body flex-col justify-between">
+                <div class="cv-summary-preview" id="dash-cv-preview">
+                  <p class="text-muted">No resume uploaded. Go to the "My CV Profile" tab to add your professional profile details.</p>
+                </div>
+                <div class="card-actions mt-auto">
+                  <button id="btn-edit-cv-shortcut" class="btn btn-secondary btn-block">
+                    <i class="fa-solid fa-edit"></i> Edit CV Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: MY CV PROFILE -->
+        <section id="tab-cv" class="tab-panel">
+          <div class="section-header">
+            <h2>My CV Profile</h2>
+            <p>Paste or write your professional experience, education, and technical skills. This data is used to calculate job alignment.</p>
+          </div>
+
+          <div class="layout-split">
+            <div class="card col-2">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-pen-nib"></i> Professional Resume Data</h3>
+                <span class="text-muted text-xs">Saved locally in browser</span>
+              </div>
+              <div class="card-body">
+                <form id="form-cv">
+                  <div class="form-group">
+                    <label for="cv-full-name">Full Name</label>
+                    <input type="text" id="cv-full-name" placeholder="e.g. Jaison Hernando Velasco" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="cv-title">Professional Headline / Role</label>
+                    <input type="text" id="cv-title" placeholder="e.g. Senior Fullstack Developer / DevOps Engineer" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="cv-skills">Skills (Comma-separated)</label>
+                    <textarea id="cv-skills" rows="3" placeholder="JavaScript, Node.js, Next.js, PostgreSQL, Docker, AWS, AI Integration" required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="cv-body">Work Experience & Education (Markdown or Plain Text)</label>
+                    <textarea id="cv-body" rows="15" placeholder="Paste your complete resume details here. Include details about previous jobs, accomplishments, and education..." required></textarea>
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fa-solid fa-floppy-disk"></i> Save Resume Profile
+                    </button>
+                    <button type="button" id="btn-clear-cv" class="btn btn-danger-outline">
+                      <i class="fa-solid fa-trash-can"></i> Clear CV
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Tips Panel -->
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-lightbulb"></i> CV Optimization Tips</h3>
+              </div>
+              <div class="card-body">
+                <ul class="tips-list">
+                  <li><strong>Be Quantifiable</strong>: Instead of "developed features", use "developed API features reducing latency by 30%".</li>
+                  <li><strong>List Core Keywords</strong>: ATS filters match specific keywords. Make sure technologies you know are explicitly mentioned.</li>
+                  <li><strong>Keep it Clean</strong>: Avoid complicated double-column structures in final exports. Simple, clean layouts are easier for parser algorithms.</li>
+                </ul>
+                <div class="alert alert-info mt-4">
+                  <i class="fa-solid fa-shield-halved"></i>
+                  <p>All data is stored safely in your browser and never sent to any external server (except directly to your chosen AI endpoint when analyzing).</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: JOB TRACKER -->
+        <section id="tab-jobs" class="tab-panel">
+          <div class="section-header">
+            <h2>Job Tracker</h2>
+            <p>Add new jobs you are interested in. Track their application status and launch compatibility reports.</p>
+          </div>
+
+          <div class="layout-split">
+            <!-- Add Job Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 id="job-form-title"><i class="fa-solid fa-circle-plus"></i> Add Job Offer</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-job">
+                  <input type="hidden" id="job-id">
+                  <div class="form-group">
+                    <label for="job-title">Job Title</label>
+                    <input type="text" id="job-title" placeholder="e.g. Senior React Developer" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="job-company">Company</label>
+                    <input type="text" id="job-company" placeholder="e.g. Acme Corp" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="job-url">Job URL / Link</label>
+                    <input type="url" id="job-url" placeholder="e.g. https://linkedin.com/jobs/view/...">
+                  </div>
+                  <div class="form-group">
+                    <label for="job-status">Application Status</label>
+                    <select id="job-status">
+                      <option value="Interested">Interested</option>
+                      <option value="Applied">Applied</option>
+                      <option value="Interviewing">Interviewing</option>
+                      <option value="Offer">Offer</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="job-description">Job Description / Requirements</label>
+                    <textarea id="job-description" rows="10" placeholder="Paste the job requirements, responsibilities, and qualifications listed in the description..." required></textarea>
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" id="btn-save-job" class="btn btn-primary btn-block">
+                      <i class="fa-solid fa-plus-circle"></i> Add Job to Tracker
+                    </button>
+                    <button type="button" id="btn-cancel-job-edit" class="btn btn-secondary btn-block hidden">
+                      Cancel Edit
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Job List Panel -->
+            <div class="card col-2">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-folder-open"></i> Saved Vacancies</h3>
+              </div>
+              <div class="card-body">
+                <div class="jobs-grid" id="jobs-list-container">
+                  <!-- Dynamic Job Cards will go here -->
+                  <div class="empty-state">
+                    <i class="fa-solid fa-briefcase"></i>
+                    <p>No jobs added yet. Use the form on the left or load the demo data to populate this dashboard.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: AI MATCH CENTER -->
+        <section id="tab-match" class="tab-panel">
+          <div class="section-header">
+            <h2>AI Match Center</h2>
+            <p>Run semantic matching algorithms to compare your CV against any job in your tracker. Get precise alignment scores and advice.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-bolt-lightning"></i> Configure Alignment Comparison</h3>
+            </div>
+            <div class="card-body">
+              <div class="match-selectors">
+                <div class="selector-group">
+                  <label for="match-select-job">Select Vacancy to Analyze</label>
+                  <select id="match-select-job">
+                    <option value="">-- Choose a job --</option>
+                  </select>
+                </div>
+                <div class="selector-action">
+                  <button id="btn-run-match" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-brain"></i> Calculate Compatibility
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Analysis Results Panel -->
+          <div class="card mt-6 hidden" id="match-results-panel">
+            <div class="card-header border-b">
+              <h3><i class="fa-solid fa-square-poll-vertical"></i> Analysis Results</h3>
+              <div class="score-badge" id="match-score-badge">0%</div>
+            </div>
+            <div class="card-body">
+              <div class="match-results-grid">
+                
+                <!-- Left Details: Score & Breakdown -->
+                <div class="match-left">
+                  <h4>Compatibility Score</h4>
+                  <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="match-progress-fill" style="width: 0%"></div>
+                  </div>
+                  <p class="text-sm mt-2" id="match-summary-text"></p>
+
+                  <div class="match-details-tabs mt-4">
+                    <div class="tab-pill-container">
+                      <button class="pill active" data-subtab="gaps">Gaps (Missing Skills)</button>
+                      <button class="pill" data-subtab="strengths">Strengths (Alignment)</button>
+                      <button class="pill" data-subtab="tips">Improvement Tips</button>
+                    </div>
+
+                    <div class="pill-panels mt-4">
+                      <div id="subtab-gaps" class="subtab-panel active">
+                        <ul class="bullet-list-check" id="match-gaps-list"></ul>
+                      </div>
+                      <div id="subtab-strengths" class="subtab-panel">
+                        <ul class="bullet-list-check" id="match-strengths-list"></ul>
+                      </div>
+                      <div id="subtab-tips" class="subtab-panel">
+                        <ul class="bullet-list-check" id="match-tips-list"></ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Quick Tools -->
+                <div class="match-right border-l">
+                  <h4>Available Quick Actions</h4>
+                  <p class="text-xs text-muted mb-4">Generate custom materials for this vacancy based on the analysis.</p>
+                  
+                  <div class="action-buttons-stack">
+                    <button class="btn btn-secondary btn-block text-left" id="btn-quick-cv">
+                      <i class="fa-solid fa-file-signature"></i> Tailor Resume Bullet Points
+                    </button>
+                    <button class="btn btn-secondary btn-block text-left" id="btn-quick-letter">
+                      <i class="fa-solid fa-envelope-open-text"></i> Draft Cover Letter
+                    </button>
+                    <button class="btn btn-secondary btn-block text-left" id="btn-quick-coach">
+                      <i class="fa-solid fa-comments-question"></i> Prepare Interview Questions
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: OPTIMIZER TOOLS -->
+        <section id="tab-tools" class="tab-panel">
+          <div class="section-header">
+            <h2>Optimizer Tools</h2>
+            <p>Generate tailored materials for your chosen vacancy. These tools require that you select a job to compare against your CV.</p>
+          </div>
+
+          <div class="card mb-6">
+            <div class="card-body flex-row items-center justify-between">
+              <div class="flex-row items-center gap-4">
+                <i class="fa-solid fa-briefcase text-2xl text-blue"></i>
+                <div>
+                  <h4 class="m-0" id="tool-selected-job-title">No job selected</h4>
+                  <span class="text-xs text-muted" id="tool-selected-job-company">Please select a vacancy in the Match Center or here.</span>
+                </div>
+              </div>
+              <div>
+                <select id="tools-select-job" class="select-inline">
+                  <option value="">-- Switch job --</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tools Section Grid -->
+          <div class="tools-workspace">
+            <!-- Tools Navigation Tabs -->
+            <div class="tools-sidebar-tabs">
+              <button class="tool-tab-btn active" data-tool="cv-improve">
+                <i class="fa-solid fa-user-pen"></i> Tailor CV Bullet Points
+              </button>
+              <button class="tool-tab-btn" data-tool="cover-letter">
+                <i class="fa-solid fa-file-lines"></i> Cover Letter Generator
+              </button>
+              <button class="tool-tab-btn" data-tool="interview-prep">
+                <i class="fa-solid fa-user-tie"></i> Interview Preparation
+              </button>
+            </div>
+
+            <!-- Tools Output Panels -->
+            <div class="tools-content-card card">
+              
+              <!-- Subtool: Tailor CV -->
+              <div id="tool-panel-cv-improve" class="tool-panel active">
+                <div class="tool-header border-b">
+                  <div>
+                    <h3>Tailor CV Bullet Points</h3>
+                    <p class="text-sm text-muted">Optimize existing descriptions in your resume to match this job listing's keywords.</p>
+                  </div>
+                  <button id="btn-generate-cv-tailor" class="btn btn-primary">
+                    <i class="fa-solid fa-gears"></i> Generate Recommendations
+                  </button>
+                </div>
+                <div class="tool-body">
+                  <div id="cv-tailor-loading" class="spinner-container hidden">
+                    <div class="spinner"></div>
+                    <p>AI is analyzing keywords and experience elements...</p>
+                  </div>
+                  <div id="cv-tailor-placeholder" class="empty-state">
+                    <i class="fa-solid fa-user-check"></i>
+                    <p>Click "Generate Recommendations" above to get customized CV suggestions.</p>
+                  </div>
+                  <div id="cv-tailor-output" class="markdown-preview hidden">
+                    <!-- CV suggestions will render here -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Subtool: Cover Letter -->
+              <div id="tool-panel-cover-letter" class="tool-panel">
+                <div class="tool-header border-b">
+                  <div>
+                    <h3>Cover Letter Generator</h3>
+                    <p class="text-sm text-muted">Generate a professionally customized letter matching your background and this vacancy.</p>
+                  </div>
+                  <button id="btn-generate-cover-letter" class="btn btn-primary">
+                    <i class="fa-solid fa-magic"></i> Generate Letter
+                  </button>
+                </div>
+                <div class="tool-body">
+                  <div class="form-row mb-4">
+                    <div class="form-group col-2">
+                      <label for="cover-letter-tone">Tone of Letter</label>
+                      <select id="cover-letter-tone">
+                        <option value="Professional & Formal">Professional & Formal</option>
+                        <option value="Enthusiastic & Creative">Enthusiastic & Creative</option>
+                        <option value="Technical & Detailed">Technical & Detailed</option>
+                        <option value="Short & Direct">Short & Direct</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="cover-letter-loading" class="spinner-container hidden">
+                    <div class="spinner"></div>
+                    <p>AI is writing a custom cover letter based on your CV...</p>
+                  </div>
+                  <div id="cover-letter-placeholder" class="empty-state">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <p>Choose a tone and click "Generate Letter" to begin drafting.</p>
+                  </div>
+                  <div id="cover-letter-wrapper" class="hidden">
+                    <div class="textarea-container">
+                      <textarea id="cover-letter-output" rows="18" class="textarea-readonly" readonly></textarea>
+                    </div>
+                    <div class="tool-actions mt-4">
+                      <button id="btn-copy-cover-letter" class="btn btn-secondary">
+                        <i class="fa-solid fa-copy"></i> Copy to Clipboard
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Subtool: Interview Prep -->
+              <div id="tool-panel-interview-prep" class="tool-panel">
+                <div class="tool-header border-b">
+                  <div>
+                    <h3>Interview Coach</h3>
+                    <p class="text-sm text-muted">Review simulated technical and behavioral questions specific to this vacancy and get recommended answers.</p>
+                  </div>
+                  <button id="btn-generate-interview" class="btn btn-primary">
+                    <i class="fa-solid fa-comments"></i> Create Interview Guide
+                  </button>
+                </div>
+                <div class="tool-body">
+                  <div id="interview-loading" class="spinner-container hidden">
+                    <div class="spinner"></div>
+                    <p>AI is formulating customized behavioral and technical questions...</p>
+                  </div>
+                  <div id="interview-placeholder" class="empty-state">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <p>Click "Create Interview Guide" to generate customized study questions.</p>
+                  </div>
+                  <div id="interview-output" class="markdown-preview hidden">
+                    <!-- Q&As will render here -->
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: API SETTINGS -->
+        <section id="tab-settings" class="tab-panel">
+          <div class="section-header">
+            <h2>API Settings</h2>
+            <p>Configure your client-side AI credentials. Keys are saved in <strong>your browser only</strong> and never sent to external servers.</p>
+          </div>
+
+          <div class="layout-split">
+            <!-- API Configuration -->
+            <div class="card col-2">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-key"></i> Key Setup</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-settings">
+                  
+                  <div class="settings-option mb-6">
+                    <div class="radio-header">
+                      <label class="radio-label">
+                        <input type="radio" name="ai-provider" value="mock" checked>
+                        <span>Demo Mode (Mock AI)</span>
+                      </label>
+                      <span class="badge badge-secondary">Default</span>
+                    </div>
+                    <p class="text-xs text-muted ml-6">Generates smart mock responses instantaneously. Perfect for reviewing the application without using an API key.</p>
+                  </div>
+
+                  <div class="settings-option mb-6">
+                    <div class="radio-header">
+                      <label class="radio-label">
+                        <input type="radio" name="ai-provider" value="gemini">
+                        <span>Google Gemini API</span>
+                      </label>
+                      <span class="badge badge-primary">Recommended</span>
+                    </div>
+                    <div class="settings-fields ml-6 mt-2">
+                      <div class="form-group">
+                        <label for="setting-gemini-key">Gemini API Key</label>
+                        <input type="password" id="setting-gemini-key" placeholder="AIzaSy...">
+                      </div>
+                      <div class="form-group">
+                        <label for="setting-gemini-model">Gemini Model</label>
+                        <select id="setting-gemini-model">
+                          <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast & economical)</option>
+                          <option value="gemini-1.5-pro">Gemini 1.5 Pro (Highly smart & detailed)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="settings-option mb-6">
+                    <div class="radio-header">
+                      <label class="radio-label">
+                        <input type="radio" name="ai-provider" value="openai">
+                        <span>OpenAI API</span>
+                      </label>
+                    </div>
+                    <div class="settings-fields ml-6 mt-2">
+                      <div class="form-group">
+                        <label for="setting-openai-key">OpenAI API Key</label>
+                        <input type="password" id="setting-openai-key" placeholder="sk-proj-...">
+                      </div>
+                      <div class="form-group">
+                        <label for="setting-openai-model">OpenAI Model</label>
+                        <select id="setting-openai-model">
+                          <option value="gpt-4o-mini">GPT-4o Mini (Fast)</option>
+                          <option value="gpt-4o">GPT-4o (Premium)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-actions mt-8">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fa-solid fa-floppy-disk"></i> Save Configurations
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Credentials Safety -->
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-lock"></i> Credential Safety</h3>
+              </div>
+              <div class="card-body">
+                <div class="safety-checkpoint mb-4">
+                  <div class="checkpoint-icon text-green"><i class="fa-solid fa-circle-check"></i></div>
+                  <div>
+                    <h5>100% Client-Side</h5>
+                    <p class="text-xs text-muted">All network requests go directly from your browser to the Google or OpenAI API servers. There is no middleman backend saving your tokens.</p>
+                  </div>
+                </div>
+                <div class="safety-checkpoint mb-4">
+                  <div class="checkpoint-icon text-green"><i class="fa-solid fa-circle-check"></i></div>
+                  <div>
+                    <h5>Safe Local Storage</h5>
+                    <p class="text-xs text-muted">Keys are stored inside your browser's private Sandbox (LocalStorage). Nobody else has access to them.</p>
+                  </div>
+                </div>
+                <div class="safety-checkpoint">
+                  <div class="checkpoint-icon text-blue"><i class="fa-solid fa-circle-info"></i></div>
+                  <div>
+                    <h5>Get a Gemini API Key</h5>
+                    <p class="text-xs text-muted">You can get a free Google Gemini key directly from Google AI Studio. It supports excellent free limits.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+      <span id="toast-message">Configuration saved successfully!</span>
+    </div>
+
+  </div>
+
+  <!-- Load JS Modules -->
+  <script type="module" src="/src/js/app.js"></script>
+</body>
+</html>
