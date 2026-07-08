@@ -279,11 +279,22 @@ function loadDemoData() {
 
 function handleCVSubmit(e) {
   e.preventDefault();
+  const summary = document.getElementById('cv-summary')?.value.trim() || '';
+  const experience = document.getElementById('cv-experience')?.value.trim() || '';
+  const education = document.getElementById('cv-education')?.value.trim() || '';
+  const bodyParts = [];
+  if (summary) bodyParts.push('# Professional Summary\n' + summary);
+  if (experience) bodyParts.push('# Work Experience\n' + experience);
+  if (education) bodyParts.push('# Education & Certifications\n' + education);
+  const combinedBody = bodyParts.join('\n\n');
+  const cvBodyField = document.getElementById('cv-body');
+  if (cvBodyField) cvBodyField.value = combinedBody;
+
   const cvData = {
     fullName: document.getElementById('cv-full-name').value.trim(),
     title: document.getElementById('cv-title').value.trim(),
     skills: document.getElementById('cv-skills').value.trim(),
-    body: document.getElementById('cv-body').value.trim()
+    body: combinedBody
   };
 
   state.cv = cvData;
@@ -380,6 +391,13 @@ async function handleFileSelect(file) {
       if (extracted.fullName) document.getElementById('cv-full-name').value = extracted.fullName;
       if (extracted.title) document.getElementById('cv-title').value = extracted.title;
       if (extracted.skills) document.getElementById('cv-skills').value = extracted.skills;
+      // Auto-split into sectioned fields
+      const summaryMatch = text.match(/(?:^|\n)(?:#\s*)?(?:Professional\s+)?Summary\s*(?:\n)([\s\S]*?)(?=\n#|$)/i);
+      const experienceMatch = text.match(/(?:^|\n)(?:#\s*)?(?:Work\s+)?Experience\s*(?:\n)([\s\S]*?)(?=\n#|$)/i);
+      const educationMatch = text.match(/(?:^|\n)(?:#\s*)?(?:Education|Certifications)[^]*?(?:\n)([\s\S]*?)(?=\n#|$)/i);
+      if (summaryMatch) document.getElementById('cv-summary').value = summaryMatch[1].trim();
+      if (experienceMatch) document.getElementById('cv-experience').value = experienceMatch[1].trim();
+      if (educationMatch) document.getElementById('cv-education').value = educationMatch[1].trim();
       // Try AI-enhanced extraction asynchronously
       if (state.apiConfig && state.apiConfig.provider !== 'mock') {
         enhanceCVFields(text, extracted, state.apiConfig).then(aiExtracted => {
@@ -1142,6 +1160,9 @@ function renderCVDetails() {
   const title = document.getElementById('cv-title');
   const skills = document.getElementById('cv-skills');
   const body = document.getElementById('cv-body');
+  const summaryField = document.getElementById('cv-summary');
+  const experienceField = document.getElementById('cv-experience');
+  const educationField = document.getElementById('cv-education');
   
   const summaryBox = document.getElementById('dash-cv-preview');
   const statCvStatus = document.getElementById('stat-cv-status');
@@ -1151,6 +1172,16 @@ function renderCVDetails() {
     title.value = state.cv.title || '';
     skills.value = state.cv.skills || '';
     body.value = state.cv.body || '';
+
+    // Parse body into sections
+    const bodyText = state.cv.body || '';
+    const summaryMatch = bodyText.match(/# Professional Summary\s*\n([\s\S]*?)(?=\n# |$)/);
+    const experienceMatch = bodyText.match(/# Work Experience\s*\n([\s\S]*?)(?=\n# |$)/);
+    const educationMatch = bodyText.match(/# (?:Education|Certifications)[& ]*Certifications?\s*\n([\s\S]*?)(?=\n# |$)/);
+    
+    if (summaryField) summaryField.value = (summaryMatch ? summaryMatch[1].trim() : '');
+    if (experienceField) experienceField.value = (experienceMatch ? experienceMatch[1].trim() : bodyText);
+    if (educationField) educationField.value = (educationMatch ? educationMatch[1].trim() : '');
 
     statCvStatus.innerText = "Configured";
     statCvStatus.className = 'stat-value text-green';
@@ -1168,6 +1199,9 @@ function renderCVDetails() {
     title.value = '';
     skills.value = '';
     body.value = '';
+    if (summaryField) summaryField.value = '';
+    if (experienceField) experienceField.value = '';
+    if (educationField) educationField.value = '';
 
     statCvStatus.innerText = "Not Set";
     statCvStatus.className = 'stat-value text-muted';

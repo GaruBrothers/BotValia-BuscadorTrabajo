@@ -274,8 +274,20 @@
                     <textarea id="cv-skills" rows="3" placeholder="JavaScript, Node.js, Next.js, PostgreSQL, Docker, AWS, AI Integration" required></textarea>
                   </div>
                   <div class="form-group">
-                    <label for="cv-body">Work Experience & Education (Markdown or Plain Text)</label>
-                    <textarea id="cv-body" rows="15" placeholder="Paste your complete resume details here. Include details about previous jobs, accomplishments, and education..." required></textarea>
+                    <label for="cv-summary">Professional Summary</label>
+                    <textarea id="cv-summary" rows="4" placeholder="Brief professional summary — e.g. Highly skilled Senior Fullstack Developer with 6+ years of experience..."></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="cv-experience">Work Experience</label>
+                    <textarea id="cv-experience" rows="6" placeholder="List your work experience, job titles, companies, dates, and key accomplishments..."></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="cv-education">Education & Certifications</label>
+                    <textarea id="cv-education" rows="4" placeholder="Degrees, certifications, and relevant training..."></textarea>
+                  </div>
+                  <div class="form-group hidden">
+                    <label for="cv-body">Combined Raw Body (auto-generated)</label>
+                    <textarea id="cv-body" rows="3" readonly></textarea>
                   </div>
                   <div class="form-actions">
                     <button type="submit" class="btn btn-primary">
