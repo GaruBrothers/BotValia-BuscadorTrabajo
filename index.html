@@ -271,12 +271,14 @@
                   </div>
                   <div class="form-group">
                     <label for="cv-skills">Skills (Comma-separated)</label>
-                    <textarea id="cv-skills" rows="3" placeholder="JavaScript, Node.js, Next.js, PostgreSQL, Docker, AWS, AI Integration" required></textarea>
+                    <textarea id="cv-skills" rows="3" placeholder="JavaScript, Node.js, Next.js, PostgreSQL, Docker, AWS, AI Integration" required data-limit="500"></textarea>
+                    <div class="char-counter" id="counter-cv-skills"></div>
                     <div id="skills-tags-container" class="skills-tags-container mt-1"></div>
                   </div>
                   <div class="form-group">
                     <label for="cv-summary">Professional Summary</label>
-                    <textarea id="cv-summary" rows="4" placeholder="Brief professional summary — e.g. Highly skilled Senior Fullstack Developer with 6+ years of experience..."></textarea>
+                    <textarea id="cv-summary" rows="4" placeholder="Brief professional summary — e.g. Highly skilled Senior Fullstack Developer with 6+ years of experience..." data-limit="300"></textarea>
+                    <div class="char-counter" id="counter-cv-summary"></div>
                     <button type="button" class="btn btn-sm btn-outline mt-1 ai-suggest-btn" data-target="cv-summary">
                       <i class="fa-solid fa-wand-magic-sparkles"></i> Suggest AI Improvements
                     </button>
@@ -284,7 +286,8 @@
                   </div>
                   <div class="form-group">
                     <label for="cv-experience">Work Experience</label>
-                    <textarea id="cv-experience" rows="6" placeholder="List your work experience, job titles, companies, dates, and key accomplishments..."></textarea>
+                    <textarea id="cv-experience" rows="6" placeholder="List your work experience, job titles, companies, dates, and key accomplishments..." data-limit="1000"></textarea>
+                    <div class="char-counter" id="counter-cv-experience"></div>
                     <button type="button" class="btn btn-sm btn-outline mt-1 ai-suggest-btn" data-target="cv-experience">
                       <i class="fa-solid fa-wand-magic-sparkles"></i> Suggest AI Improvements
                     </button>
@@ -292,7 +295,8 @@
                   </div>
                   <div class="form-group">
                     <label for="cv-education">Education & Certifications</label>
-                    <textarea id="cv-education" rows="4" placeholder="Degrees, certifications, and relevant training..."></textarea>
+                    <textarea id="cv-education" rows="4" placeholder="Degrees, certifications, and relevant training..." data-limit="500"></textarea>
+                    <div class="char-counter" id="counter-cv-education"></div>
                     <button type="button" class="btn btn-sm btn-outline mt-1 ai-suggest-btn" data-target="cv-education">
                       <i class="fa-solid fa-wand-magic-sparkles"></i> Suggest AI Improvements
                     </button>

@@ -110,6 +110,12 @@ function setupEventListeners() {
   document.getElementById('btn-export-resume')?.addEventListener('click', handleExportResume);
   document.getElementById('cv-skills')?.addEventListener('input', renderSkillTags);
 
+  // Character counters
+  document.querySelectorAll('textarea[data-limit]').forEach(el => {
+    el.addEventListener('input', () => updateCharCounter(el));
+    updateCharCounter(el);
+  });
+
   // AI Suggest buttons (delegated)
   document.getElementById('form-cv')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.ai-suggest-btn');
@@ -1246,6 +1252,20 @@ function renderSkillTags() {
       renderSkillTags();
     });
   });
+}
+
+function updateCharCounter(el) {
+  const counter = document.getElementById('counter-' + el.id);
+  if (!counter) return;
+  const max = parseInt(el.dataset.limit) || 500;
+  const len = el.value.length;
+  const pct = Math.min(len / max * 100, 100);
+  const remaining = max - len;
+  let color = 'var(--color-success)';
+  let label = `${len} / ${max}`;
+  if (remaining < 0) { color = 'var(--color-danger)'; label = `OVER by ${Math.abs(remaining)}`; }
+  else if (remaining < 50) { color = 'var(--color-warning)'; }
+  counter.innerHTML = `<div class="char-bar"><div class="char-bar-fill" style="width:${pct}%;background:${color};border-radius:4px;height:4px;transition:width 0.2s,background 0.2s"></div></div><span class="char-count-label" style="color:${color}">${label}</span>`;
 }
 
 function renderSkillsCloud() {

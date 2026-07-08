@@ -1824,6 +1824,33 @@ textarea {
 }
 
 /* ==========================================
+   CHARACTER COUNTER
+   ========================================== */
+.char-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+.char-bar {
+  flex: 1;
+  background: var(--border-color);
+  border-radius: 4px;
+  height: 4px;
+  max-width: 200px;
+}
+.char-bar-fill {
+  height: 4px;
+  border-radius: 4px;
+  transition: width 0.2s, background 0.2s;
+}
+.char-count-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ==========================================
    SKILLS CLOUD
    ========================================== */
 .right-stack {
