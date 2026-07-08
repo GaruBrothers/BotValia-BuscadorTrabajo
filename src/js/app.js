@@ -1156,15 +1156,24 @@ function renderKanbanBoard() {
       return;
     }
 
+    const allStatuses = ['Interested', 'Applied', 'Interviewing', 'Offer', 'Rejected'];
+    const otherStatuses = allStatuses.filter(s => s !== status);
+
     container.innerHTML = jobsInStatus.map(job => {
       const scoreHtml = job.matchScore !== undefined
         ? `<span class="kanban-score"><span class="badge ${job.matchScore > 80 ? 'badge-success' : job.matchScore > 50 ? 'badge-warning' : 'badge-danger'}" style="font-size:0.65rem">${job.matchScore}%</span></span>`
         : '';
+      const statusBtns = otherStatuses.slice(0, 3).map(s => `
+        <button class="btn btn-xs btn-secondary kanban-mobile-btn" data-id="${job.id}" data-newstatus="${s}" style="font-size:0.6rem;padding:0.15rem 0.3rem" title="Move to ${s}">${s[0]}</button>
+      `).join('');
       return `
         <div class="kanban-card" draggable="true" data-id="${job.id}" data-status="${status}">
           <h5>${job.title}</h5>
           <div class="kanban-company">${job.company}</div>
           ${scoreHtml}
+          <div class="kanban-mobile-actions" style="display:flex;gap:0.25rem;margin-top:0.35rem">
+            ${statusBtns}
+          </div>
         </div>
       `;
     }).join('');
@@ -1174,6 +1183,22 @@ function renderKanbanBoard() {
   document.querySelectorAll('.kanban-card').forEach(card => {
     card.addEventListener('dragstart', handleDragStart);
     card.addEventListener('dragend', handleDragEnd);
+  });
+
+  // Bind mobile status buttons
+  document.querySelectorAll('.kanban-mobile-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const jobId = btn.getAttribute('data-id');
+      const newStatus = btn.getAttribute('data-newstatus');
+      const job = state.jobs.find(j => j.id === jobId);
+      if (!job || job.status === newStatus) return;
+      job.status = newStatus;
+      localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
+      renderKanbanBoard();
+      renderJobsTab();
+      renderDashboard();
+      showToast(`"${job.title}" moved to ${newStatus}`);
+    });
   });
 
   document.querySelectorAll('.kanban-cards').forEach(col => {
