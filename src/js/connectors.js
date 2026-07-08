@@ -217,7 +217,7 @@ export function buildComputrabajoRegionalSearch(cv, desiredRole, country) {
  * Simulates a portal search returning mock results based on CV profile.
  * Each result mimics what a real portal would return.
  */
-export function simulatePortalSearch(portal, cv, jobTitle, count = 4) {
+export function simulatePortalSearch(portal, cv, jobTitle, count = 4, filters = {}) {
   const config = PORTAL_CONFIG[portal];
   if (!config) return [];
 
@@ -231,7 +231,10 @@ export function simulatePortalSearch(portal, cv, jobTitle, count = 4) {
     computrabajo: ['TecnoGlobal', 'Sistemas Plus', 'DigitalCol', 'Avantica']
   };
 
-  const locations = ['Remote', 'Bogotá, Colombia', 'Medellín, Colombia', 'São Paulo, Brazil', 'Mexico City, Mexico'];
+  const defaultLocations = ['Remote', 'Bogotá, Colombia', 'Medellín, Colombia', 'São Paulo, Brazil', 'Mexico City, Mexico'];
+  const locations = filters.location
+    ? [filters.location, filters.location]
+    : defaultLocations;
 
   const portalCompanies = companies[portal] || companies.linkedin;
 
@@ -248,6 +251,11 @@ export function simulatePortalSearch(portal, cv, jobTitle, count = 4) {
     const scoreBase = (skills.length * 10 + (jobTitle ? jobTitle.length : 10) + i * 5) % 41 + 60;
     const matchScore = Math.min(98, scoreBase);
 
+    const isRemote = location.toLowerCase().includes('remote') || filters.workType === 'remote';
+    const salaryDisplay = filters.salary
+      ? `USD $${parseInt(filters.salary).toLocaleString()} - $${(parseInt(filters.salary) + 30000).toLocaleString()}`
+      : '';
+
     results.push({
       id: `${portal}-result-${Date.now()}-${i}`,
       title: role,
@@ -256,10 +264,16 @@ export function simulatePortalSearch(portal, cv, jobTitle, count = 4) {
       source: portal,
       url: config.baseUrl,
       matchScore: matchScore,
+      remote: isRemote,
+      salary: salaryDisplay,
       snippet: `We are looking for a ${role} to join our team at ${company}. You will work with cutting-edge technologies in a collaborative environment.`,
       postedDate: `${Math.floor(Math.random() * 14) + 1}d ago`
     });
   }
+
+  // Apply work type filter post-generation
+  if (filters.workType === 'remote') return results.filter(r => r.remote);
+  if (filters.workType === 'onsite') return results.filter(r => !r.remote);
 
   return results;
 }

@@ -447,6 +447,49 @@
                 <i class="fa-solid fa-shield-halved"></i>
                 <p>Connectors generate search queries based on your CV skills and profile. Results are simulated locally. No external API keys required.</p>
               </div>
+              <!-- Advanced Search Filters -->
+              <div class="card mb-4" style="background: rgba(255,255,255,0.02);">
+                <div class="card-header">
+                  <h4 style="font-size:0.95rem"><i class="fa-solid fa-sliders"></i> Advanced Search Filters</h4>
+                </div>
+                <div class="card-body">
+                  <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Minimum Salary</label>
+                      <select id="filter-salary" class="connector-filter">
+                        <option value="">Any salary</option>
+                        <option value="30000">$30,000+</option>
+                        <option value="50000">$50,000+</option>
+                        <option value="70000">$70,000+</option>
+                        <option value="90000">$90,000+</option>
+                        <option value="120000">$120,000+</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Location</label>
+                      <select id="filter-location" class="connector-filter">
+                        <option value="">Any location</option>
+                        <option value="Colombia">Colombia</option>
+                        <option value="Remote">Remote</option>
+                        <option value="United States">United States</option>
+                        <option value="Mexico">Mexico</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="Spain">Spain</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="text-xs text-muted">Work Type</label>
+                      <select id="filter-work-type" class="connector-filter">
+                        <option value="">All types</option>
+                        <option value="remote">Remote Only</option>
+                        <option value="hybrid">Hybrid</option>
+                        <option value="onsite">On-site</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="connectors-grid" id="connectors-grid">
                 <!-- LinkedIn -->
                 <div class="connector-card" data-portal="linkedin">

@@ -390,6 +390,9 @@ async function handleScanPortals() {
 
   const allResults = [];
   const desiredRole = document.querySelector('.connector-query[data-portal="linkedin"]')?.value || '';
+  const salaryFilter = document.getElementById('filter-salary')?.value || '';
+  const locationFilter = document.getElementById('filter-location')?.value || '';
+  const workTypeFilter = document.getElementById('filter-work-type')?.value || '';
 
   for (let i = 0; i < activePortals.length; i++) {
     const portal = activePortals[i];
@@ -417,7 +420,7 @@ async function handleScanPortals() {
     }
 
     try {
-      let results = simulatePortalSearch(portal, state.cv, desiredRole, 3);
+      let results = simulatePortalSearch(portal, state.cv, desiredRole, 3, { salary: salaryFilter, location: locationFilter, workType: workTypeFilter });
       const matchedCount = results.filter(r => r.matchScore >= 70).length;
       results.forEach(r => {
         r.source = portal;
