@@ -1161,6 +1161,149 @@ textarea {
 }
 
 /* ==========================================
+   CALENDAR GRID
+   ========================================== */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-collapse: collapse;
+}
+
+.calendar-header-cell {
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-cell {
+  min-height: 100px;
+  padding: 0.4rem;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.calendar-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.calendar-cell:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.calendar-cell.other-month {
+  opacity: 0.3;
+}
+
+.calendar-cell.today {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.calendar-cell .day-number {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.calendar-event {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 3px;
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--color-primary);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.calendar-event:hover {
+  background: rgba(37, 99, 235, 0.25);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal-content {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Upcoming list */
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.upcoming-item:last-child {
+  border-bottom: none;
+}
+
+.upcoming-date {
+  text-align: center;
+  min-width: 50px;
+}
+
+.upcoming-date .day {
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: block;
+}
+
+.upcoming-date .month {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.upcoming-info h5 {
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
+}
+
+.upcoming-info span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================
    FILE UPLOAD ZONE
    ========================================== */
 .upload-zone {
