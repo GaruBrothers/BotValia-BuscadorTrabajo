@@ -580,7 +580,12 @@
               <div class="card mt-6 hidden" id="connector-results-panel">
                 <div class="card-header">
                   <h3><i class="fa-solid fa-list"></i> Search Results</h3>
-                  <span class="text-sm text-muted" id="results-count">0 jobs found</span>
+                  <div class="flex-row items-center gap-4">
+                    <span class="text-sm text-muted" id="results-count">0 jobs found</span>
+                    <button id="btn-clear-results" class="btn btn-secondary btn-xs hidden">
+                      <i class="fa-solid fa-xmark"></i> Clear
+                    </button>
+                  </div>
                 </div>
                 <div class="card-body">
                   <div class="search-results-grid" id="search-results-grid"></div>

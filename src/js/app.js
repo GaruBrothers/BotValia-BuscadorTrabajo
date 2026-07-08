@@ -182,6 +182,13 @@ function setupEventListeners() {
   // Scan Portals Button
   document.getElementById('btn-scan-portals').addEventListener('click', handleScanPortals);
 
+  // Clear Results Button
+  document.getElementById('btn-clear-results').addEventListener('click', () => {
+    document.getElementById('connector-results-panel').classList.add('hidden');
+    document.getElementById('search-results-grid').innerHTML = '';
+    document.getElementById('btn-clear-results').classList.add('hidden');
+  });
+
   // Connector Toggle Switches
   document.querySelectorAll('.connector-toggle').forEach(toggle => {
     toggle.addEventListener('change', (e) => {
@@ -386,6 +393,7 @@ async function handleScanPortals() {
   progressContainer.classList.add('visible');
   scanLog.innerHTML = '';
   resultsPanel.classList.add('hidden');
+  document.getElementById('btn-clear-results').classList.add('hidden');
   resultsGrid.innerHTML = '';
 
   const allResults = [];
@@ -487,6 +495,7 @@ async function handleScanPortals() {
     });
 
     resultsPanel.classList.remove('hidden');
+    document.getElementById('btn-clear-results').classList.remove('hidden');
   }
 
   btn.disabled = false;
