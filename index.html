@@ -74,6 +74,11 @@
             </button>
           </li>
           <li>
+            <button id="nav-kanban" class="nav-item" data-tab="kanban">
+              <i class="fa-solid fa-columns"></i> <span>Kanban Board</span>
+            </button>
+          </li>
+          <li>
             <button id="nav-tools" class="nav-item" data-tab="tools">
               <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Optimizer Tools</span>
             </button>
@@ -600,6 +605,51 @@
                   <div class="search-results-grid" id="search-results-grid"></div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: KANBAN BOARD -->
+        <section id="tab-kanban" class="tab-panel">
+          <div class="section-header">
+            <h2>Kanban Board</h2>
+            <p>Drag and drop job cards across columns to update their application status. Cards are synced with the Job Tracker automatically.</p>
+          </div>
+          <div class="kanban-board" id="kanban-board">
+            <div class="kanban-column" data-status="Interested">
+              <div class="kanban-header">
+                <h4><i class="fa-regular fa-star"></i> Interested</h4>
+                <span class="kanban-count" id="count-Interested">0</span>
+              </div>
+              <div class="kanban-cards" id="kanban-Interested"></div>
+            </div>
+            <div class="kanban-column" data-status="Applied">
+              <div class="kanban-header">
+                <h4><i class="fa-regular fa-paper-plane"></i> Applied</h4>
+                <span class="kanban-count" id="count-Applied">0</span>
+              </div>
+              <div class="kanban-cards" id="kanban-Applied"></div>
+            </div>
+            <div class="kanban-column" data-status="Interviewing">
+              <div class="kanban-header">
+                <h4><i class="fa-regular fa-calendar"></i> Interviewing</h4>
+                <span class="kanban-count" id="count-Interviewing">0</span>
+              </div>
+              <div class="kanban-cards" id="kanban-Interviewing"></div>
+            </div>
+            <div class="kanban-column" data-status="Offer">
+              <div class="kanban-header">
+                <h4><i class="fa-regular fa-circle-check"></i> Offer</h4>
+                <span class="kanban-count" id="count-Offer">0</span>
+              </div>
+              <div class="kanban-cards" id="kanban-Offer"></div>
+            </div>
+            <div class="kanban-column" data-status="Rejected">
+              <div class="kanban-header">
+                <h4><i class="fa-regular fa-circle-xmark"></i> Rejected</h4>
+                <span class="kanban-count" id="count-Rejected">0</span>
+              </div>
+              <div class="kanban-cards" id="kanban-Rejected"></div>
             </div>
           </div>
         </section>
