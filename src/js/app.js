@@ -169,6 +169,12 @@ function setupEventListeners() {
   document.getElementById('btn-generate-cover-letter').addEventListener('click', handleCoverLetterGenerate);
   document.getElementById('btn-generate-interview').addEventListener('click', handleInterviewPrepGenerate);
   document.getElementById('btn-copy-cover-letter').addEventListener('click', handleCopyCoverLetter);
+  document.getElementById('btn-export-cover-txt')?.addEventListener('click', () => exportAsTxt('cover-letter-output', 'cover-letter'));
+  document.getElementById('btn-export-cover-pdf')?.addEventListener('click', () => printElement('cover-letter-output', 'Cover Letter'));
+  document.getElementById('btn-export-cv-txt')?.addEventListener('click', () => exportAsTxt('cv-tailor-output', 'cv-tailor-recommendations', true));
+  document.getElementById('btn-export-cv-pdf')?.addEventListener('click', () => printElement('cv-tailor-output', 'CV Tailoring Recommendations'));
+  document.getElementById('btn-export-interview-txt')?.addEventListener('click', () => exportAsTxt('interview-output', 'interview-guide', true));
+  document.getElementById('btn-export-interview-pdf')?.addEventListener('click', () => printElement('interview-output', 'Interview Guide'));
   document.getElementById('btn-generate-template').addEventListener('click', handleTemplateGenerate);
   document.getElementById('btn-copy-template').addEventListener('click', handleCopyTemplate);
   // Character count on template output
@@ -812,6 +818,7 @@ async function handleCVTailorGenerate() {
     const text = await optimizeCV(state.cv, job, state.apiConfig);
     output.innerHTML = parseMarkdown(text);
     output.classList.remove('hidden');
+    document.getElementById('cv-tailor-actions')?.classList.remove('hidden');
   } catch (err) {
     alert(err.message);
     placeholder.classList.remove('hidden');
@@ -868,6 +875,7 @@ async function handleInterviewPrepGenerate() {
     const text = await generateInterviewPrep(state.cv, job, state.apiConfig);
     output.innerHTML = parseMarkdown(text);
     output.classList.remove('hidden');
+    document.getElementById('interview-actions')?.classList.remove('hidden');
   } catch (err) {
     alert(err.message);
     placeholder.classList.remove('hidden');
@@ -943,6 +951,38 @@ function updateCharCount() {
       warning.innerText = '';
     }
   }
+}
+
+// ==========================================================================
+// EXPORT HELPERS (TXT / PDF)
+// ==========================================================================
+function exportAsTxt(elementId, filename, isHtml = false) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  let text = isHtml ? el.innerText || el.textContent : el.value || el.innerText;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${filename}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('File downloaded as TXT');
+}
+
+function printElement(elementId, title) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const content = el.innerHTML || `<pre>${el.value || el.innerText}</pre>`;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>
+    body { font-family: Inter, sans-serif; padding: 2rem; color: #000; }
+    pre { white-space: pre-wrap; font-size: 12pt; line-height: 1.6; }
+    .markdown-preview { font-size: 12pt; line-height: 1.6; }
+  </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 500);
 }
 
 function getSelectedToolJob() {
@@ -1765,6 +1805,7 @@ function resetToolPanels() {
   document.getElementById('cv-tailor-placeholder').classList.remove('hidden');
   document.getElementById('cv-tailor-output').classList.add('hidden');
   document.getElementById('cv-tailor-loading').classList.add('hidden');
+  document.getElementById('cv-tailor-actions')?.classList.add('hidden');
 
   document.getElementById('cover-letter-placeholder').classList.remove('hidden');
   document.getElementById('cover-letter-wrapper').classList.add('hidden');
@@ -1773,6 +1814,7 @@ function resetToolPanels() {
   document.getElementById('interview-placeholder').classList.remove('hidden');
   document.getElementById('interview-output').classList.add('hidden');
   document.getElementById('interview-loading').classList.add('hidden');
+  document.getElementById('interview-actions')?.classList.add('hidden');
 }
 
 function switchToolPanel(toolName) {

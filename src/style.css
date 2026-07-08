@@ -1304,6 +1304,98 @@ textarea {
 }
 
 /* ==========================================
+   PRINT-FRIENDLY STYLES
+   ========================================== */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .app-header,
+  .sidebar-nav,
+  .orb,
+  .toast,
+  .btn,
+  .nav-item,
+  .tools-sidebar-tabs,
+  .tool-header .btn,
+  .card-actions,
+  .job-actions,
+  .form-actions,
+  .result-actions,
+  .kanban-mobile-actions,
+  #btn-demo-mode,
+  #api-status-indicator,
+  #calendar-toolbar .btn,
+  .modal-overlay,
+  .scan-progress-container,
+  .scan-log,
+  .connectors-grid,
+  #filter-source,
+  #btn-scan-portals,
+  #btn-clear-results,
+  .toggle-switch,
+  .upload-zone,
+  #calendar-event-modal {
+    display: none !important;
+  }
+  .app-container {
+    height: auto !important;
+    display: block !important;
+  }
+  .content-viewport {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .app-workspace {
+    display: block !important;
+    overflow: visible !important;
+  }
+  .card {
+    break-inside: avoid;
+    background: white !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    margin-bottom: 1rem !important;
+  }
+  .tab-panel {
+    display: block !important;
+  }
+  .layout-split,
+  .dashboard-grid,
+  .match-results-grid,
+  .tools-workspace {
+    display: block !important;
+  }
+  .stat-card {
+    display: inline-block !important;
+    width: 30% !important;
+    background: white !important;
+    border: 1px solid #ddd !important;
+  }
+  * {
+    color: black !important;
+    text-shadow: none !important;
+  }
+  .badge {
+    border: 1px solid #999 !important;
+    background: none !important;
+  }
+  textarea, input, select {
+    border: 1px solid #ccc !important;
+    background: white !important;
+    color: black !important;
+  }
+  .markdown-preview {
+    color: black !important;
+  }
+  #match-trends-chart div[style*="background"] {
+    background: #333 !important;
+  }
+}
+
+/* ==========================================
    FILE UPLOAD ZONE
    ========================================== */
 .upload-zone {
