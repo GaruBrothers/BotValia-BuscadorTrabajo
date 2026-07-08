@@ -1,5 +1,5 @@
 import { defaultCV, defaultJobs } from './data.js';
-import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep, generateMessage, enhanceCVFields } from './ai.js';
+import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep, generateMessage, enhanceCVFields, suggestCVImprovement } from './ai.js';
 import { buildPortalUrl, simulatePortalSearch, getAllPortalKeys, getPortalConfig } from './connectors.js';
 
 // Application State
@@ -105,6 +105,12 @@ function setupEventListeners() {
   document.getElementById('form-cv').addEventListener('submit', handleCVSubmit);
   document.getElementById('btn-clear-cv').addEventListener('click', handleCVClear);
   document.getElementById('btn-export-resume')?.addEventListener('click', handleExportResume);
+
+  // AI Suggest buttons (delegated)
+  document.getElementById('form-cv')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.ai-suggest-btn');
+    if (btn) handleAISuggest(btn.dataset.target);
+  });
 
   // Job Form
   document.getElementById('form-job').addEventListener('submit', handleJobSubmit);
@@ -303,6 +309,39 @@ function handleCVSubmit(e) {
   renderCVDetails();
   renderDashboard();
   showToast("CV profile updated successfully.");
+}
+
+async function handleAISuggest(textareaId) {
+  const field = document.getElementById(textareaId);
+  const box = document.getElementById('suggest-' + textareaId);
+  if (!field || !box) return;
+  const content = field.value.trim();
+  if (!content) { showToast('Please write some content first.'); return; }
+  const sectionName = textareaId === 'cv-summary' ? 'summary' : textareaId === 'cv-experience' ? 'experience' : 'education';
+  box.innerHTML = '<div class="spinner-sm"></div> <span class="text-xs text-muted">Analyzing...</span>';
+  try {
+    const improved = await suggestCVImprovement(sectionName, content, state.apiConfig);
+    box.innerHTML = `
+      <div class="ai-suggestion-result">
+        <p class="text-xs text-muted mb-1">AI Suggestion:</p>
+        <div class="suggestion-text">${improved.replace(/\n/g, '<br>')}</div>
+        <button type="button" class="btn btn-xs btn-primary mt-1 apply-suggestion" data-target="${textareaId}">
+          <i class="fa-solid fa-check"></i> Apply
+        </button>
+        <button type="button" class="btn btn-xs btn-ghost mt-1 dismiss-suggestion">
+          Dismiss
+        </button>
+      </div>`;
+    // Wire apply/dismiss
+    box.querySelector('.apply-suggestion')?.addEventListener('click', () => {
+      field.value = improved;
+      box.innerHTML = '';
+      showToast('AI suggestion applied.');
+    });
+    box.querySelector('.dismiss-suggestion')?.addEventListener('click', () => { box.innerHTML = ''; });
+  } catch (err) {
+    box.innerHTML = `<p class="text-xs text-danger">Error: ${err.message}</p>`;
+  }
 }
 
 function handleExportResume() {

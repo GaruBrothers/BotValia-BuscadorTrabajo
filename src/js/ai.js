@@ -151,6 +151,60 @@ Provide the output in clean, readable Markdown format with sections for Question
  * Extracts key skills, roles, and technologies for portal search.
  */
 /**
+ * Suggests AI improvements for a specific CV section (summary, experience, education).
+ */
+export async function suggestCVImprovement(sectionName, sectionContent, apiConfig) {
+  const prompts = {
+    summary: `You are a professional resume writer. Rewrite the following Professional Summary to be more impactful, quantifiable, and ATS-friendly. Keep it to 3-5 sentences. Return ONLY the rewritten text, no explanations.\n\nOriginal:\n${sectionContent}`,
+    experience: `You are a professional resume writer. Improve the following Work Experience section. Use strong action verbs, add quantifiable metrics where possible, and ensure it is ATS-friendly. Return ONLY the rewritten text, no explanations.\n\nOriginal:\n${sectionContent}`,
+    education: `You are a professional resume writer. Improve the following Education & Certifications section. Make it clear and concise. Return ONLY the rewritten text, no explanations.\n\nOriginal:\n${sectionContent}`
+  };
+  const prompt = prompts[sectionName] || `Improve the following CV section (${sectionName}) for ATS compatibility and impact. Return ONLY the rewritten text.\n\n${sectionContent}`;
+
+  if (apiConfig && apiConfig.provider === 'gemini' && apiConfig.key) {
+    try {
+      const model = apiConfig.model || 'gemini-2.0-flash-lite';
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiConfig.key}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      if (!resp.ok) throw new Error(`Gemini error: ${resp.status}`);
+      const data = await resp.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text?.replace(/```[a-z]*\n?/gi, '').trim() || sectionContent;
+    } catch (e) { console.warn('AI suggest failed:', e); return sectionContent; }
+  }
+
+  if (apiConfig && apiConfig.provider === 'openai' && apiConfig.key) {
+    try {
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.key}` },
+        body: JSON.stringify({ model: apiConfig.model || 'gpt-4o-mini', messages: [{ role: 'user', content: prompt }], temperature: 0.3 })
+      });
+      if (!resp.ok) throw new Error(`OpenAI error: ${resp.status}`);
+      const data = await resp.json();
+      return data?.choices?.[0]?.message?.content?.replace(/```[a-z]*\n?/gi, '').trim() || sectionContent;
+    } catch (e) { console.warn('AI suggest failed:', e); return sectionContent; }
+  }
+
+  // Mock mode: return enhanced mock text
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const enhancements = {
+        summary: `Highly accomplished and results-driven professional with extensive experience delivering impactful solutions. Proven track record of driving efficiency improvements, leading cross-functional teams, and implementing innovative technologies to achieve measurable business outcomes. Adept at strategic planning, stakeholder management, and continuous process optimization.`,
+        experience: `- Led strategic initiatives that improved operational efficiency by 35% year-over-year through implementation of automated workflows and process redesign.
+- Spearheaded cross-functional teams to deliver complex projects on time and under budget, resulting in a 20% increase in client satisfaction scores.
+- Developed and maintained scalable architectures serving 50k+ daily active users, achieving 99.9% uptime through proactive monitoring and incident response.
+- Mentored and coached junior team members, establishing best practices and code review standards that improved team velocity by 25%.`,
+        education: `- Advanced technical certifications and continuous professional development in emerging technologies.
+- Demonstrated commitment to lifelong learning through completion of industry-recognized certification programs.
+- Strong academic foundation complemented by practical, hands-on experience in relevant technical domains.`
+      };
+      resolve(enhancements[sectionName] || `Improved version of ${sectionName} content. Consider adding more quantifiable achievements and relevant keywords.`);
+    }, 800);
+  });
+}
+
+/**
  * Uses AI to enhance/refine CV field extraction (name, title, skills) from raw text.
  */
 export async function enhanceCVFields(rawText, currentFields, apiConfig) {
