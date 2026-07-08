@@ -1008,6 +1008,19 @@ async function handleCalculateMatch() {
     return;
   }
 
+  // Validate CV sections before matching
+  const warnings = [];
+  if (!state.cv.fullName || state.cv.fullName.length < 3) warnings.push('Full Name is missing or too short.');
+  if (!state.cv.title || state.cv.title.length < 5) warnings.push('Professional Headline is missing or too generic.');
+  const skillCount = (state.cv.skills || '').split(',').filter(s => s.trim()).length;
+  if (skillCount < 3) warnings.push('Add at least 3 skills for a meaningful match analysis.');
+  const bodyLen = (state.cv.body || '').length;
+  if (bodyLen < 100) warnings.push('CV body is very short (<100 chars). Add more experience details for accurate scoring.');
+  if (warnings.length > 0) {
+    const msg = 'Your CV has the following gaps that may affect match accuracy:\n\n• ' + warnings.join('\n• ') + '\n\nDo you want to continue anyway?';
+    if (!confirm(msg)) return;
+  }
+
   const job = state.jobs.find(j => j.id === jobId);
   state.selectedJobId = jobId;
 
