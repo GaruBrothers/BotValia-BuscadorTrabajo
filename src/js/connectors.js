@@ -189,6 +189,52 @@ export function getAllPortalKeys() {
   return Object.keys(PORTAL_CONFIG);
 }
 
+/**
+ * Client-side keyword matching algorithm.
+ * Scores a job against the CV by analyzing keyword overlap,
+ * skill relevance, and role alignment.
+ */
+export function calculateKeywordMatch(job, cv) {
+  const cvText = `${cv.title} ${cv.skills} ${cv.body}`.toLowerCase();
+  const jobText = `${job.title} ${job.company} ${job.snippet || ''} ${job.description || ''}`.toLowerCase();
+
+  const skillList = cv.skills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+  // 1. Skill overlap (weight: 50%)
+  const matchedSkills = skillList.filter(skill => jobText.includes(skill));
+  const skillScore = skillList.length > 0 ? (matchedSkills.length / skillList.length) * 50 : 25;
+
+  // 2. Title alignment (weight: 25%)
+  const titleWords = job.title.toLowerCase().split(/\s+/);
+  const cvTitleWords = cv.title.toLowerCase().split(/\s+/);
+  const titleOverlap = titleWords.filter(w => cvTitleWords.includes(w) || cvText.includes(w)).length;
+  const titleScore = titleWords.length > 0 ? (titleOverlap / titleWords.length) * 25 : 10;
+
+  // 3. Location/category bonus (weight: 15%)
+  const locationBonus = (job.location || '').toLowerCase().includes('remote') ? 10 : 5;
+  const seniorityMatch = (cv.title.toLowerCase().includes('senior') && job.title.toLowerCase().includes('senior')) ? 5 : 0;
+
+  // 4. Recency bonus (weight: 10%)
+  const daysAgo = parseInt((job.postedDate || '30').replace(/\D/g, '')) || 30;
+  const recencyBonus = Math.max(0, 10 - Math.floor(daysAgo / 3));
+
+  const total = Math.min(100, Math.round(skillScore + titleScore + locationBonus + seniorityMatch + recencyBonus));
+  return total;
+}
+
+/**
+ * Filters an array of job results by minimum keyword match threshold.
+ */
+export function filterByKeywordMatch(jobs, cv, minScore = 50) {
+  return jobs
+    .map(job => ({
+      ...job,
+      matchScore: job.matchScore !== undefined ? job.matchScore : calculateKeywordMatch(job, cv)
+    }))
+    .filter(job => job.matchScore >= minScore)
+    .sort((a, b) => b.matchScore - a.matchScore);
+}
+
 export function buildLinkedInRichQuery(cv, desiredRole) {
   return PORTAL_CONFIG.linkedin.buildRichQuery(cv, desiredRole);
 }
