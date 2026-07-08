@@ -107,7 +107,9 @@ function setupEventListeners() {
   // CV Form
   document.getElementById('form-cv').addEventListener('submit', handleCVSubmit);
   document.getElementById('btn-clear-cv').addEventListener('click', handleCVClear);
-  document.getElementById('btn-export-resume')?.addEventListener('click', handleExportResume);
+  document.querySelectorAll('.export-option').forEach(btn => {
+    btn.addEventListener('click', () => handleExportResume(btn.dataset.format));
+  });
   document.getElementById('cv-skills')?.addEventListener('input', renderSkillTags);
 
   // Character counters
@@ -372,16 +374,28 @@ function addMissingSkill(skillName) {
   showToast(`"${skillName}" added to your CV skills.`);
 }
 
-function handleExportResume() {
+function handleExportResume(format) {
   if (!state.cv) { showToast('No CV data to export.'); return; }
-  const md = `# ${state.cv.fullName}\n## ${state.cv.title}\n\n**Skills**: ${state.cv.skills}\n\n${state.cv.body}`;
-  const blob = new Blob([md], { type: 'text/markdown' });
+  const name = state.cv.fullName.replace(/\s+/g, '_');
+  const body = state.cv.body || '';
+  const skills = state.cv.skills || '';
+  let content, mime, ext;
+  if (format === 'txt') {
+    content = `# ${state.cv.fullName}\n## ${state.cv.title}\n\nSkills: ${skills}\n\n${body.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^# /gm, '').replace(/^## /gm, '')}`;
+    mime = 'text/plain';
+    ext = 'txt';
+  } else {
+    content = `# ${state.cv.fullName}\n## ${state.cv.title}\n\n**Skills**: ${skills}\n\n${body}`;
+    mime = 'text/markdown';
+    ext = 'md';
+  }
+  const blob = new Blob([content], { type: mime });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${state.cv.fullName.replace(/\s+/g, '_')}_Resume.md`;
+  a.download = `${name}_Resume.${ext}`;
   a.click();
   URL.revokeObjectURL(a.href);
-  showToast('Resume exported as Markdown.');
+  showToast(`Resume exported as .${ext}`);
 }
 
 function handleCVClear() {

@@ -323,9 +323,10 @@
               <div class="card" id="cv-preview-card">
                 <div class="card-header">
                   <h3><i class="fa-solid fa-file-lines"></i> Executive Resume Preview</h3>
-                  <button type="button" id="btn-export-resume" class="btn btn-sm btn-outline">
-                    <i class="fa-solid fa-download"></i> Export
-                  </button>
+                <div class="btn-group btn-group-sm">
+                  <button type="button" class="btn btn-sm btn-outline export-option" data-format="md"><i class="fa-solid fa-download"></i> .md</button>
+                  <button type="button" class="btn btn-sm btn-outline export-option" data-format="txt"><i class="fa-solid fa-download"></i> .txt</button>
+                </div>
                 </div>
                 <div class="card-body" id="cv-preview-body">
                   <div class="resume-preview placeholder-preview">

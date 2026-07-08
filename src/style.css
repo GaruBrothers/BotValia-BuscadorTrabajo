@@ -1686,6 +1686,18 @@ textarea {
 }
 
 /* ==========================================
+   BUTTON GROUP
+   ========================================== */
+.btn-group-sm {
+  display: flex;
+  gap: 0.25rem;
+}
+.btn-group-sm .btn {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* ==========================================
    INTERACTIVE SKILL TAGS WITH PROFICIENCY
    ========================================== */
 .skills-tags-container {
