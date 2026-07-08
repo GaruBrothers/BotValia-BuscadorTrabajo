@@ -348,6 +348,24 @@ async function handleAISuggest(textareaId) {
   }
 }
 
+function addMissingSkill(skillName) {
+  if (!state.cv) { showToast('Save a CV profile first.'); return; }
+  const skillsField = document.getElementById('cv-skills');
+  if (!skillsField) return;
+  const current = skillsField.value.split(',').map(s => s.trim()).filter(Boolean);
+  if (current.some(s => s.toLowerCase() === skillName.toLowerCase())) {
+    showToast(`"${skillName}" is already in your skills list.`);
+    return;
+  }
+  current.push(skillName);
+  skillsField.value = current.join(', ');
+  state.cv.skills = skillsField.value;
+  localStorage.setItem('botvalia_cv', JSON.stringify(state.cv));
+  renderSkillTags();
+  renderCVPreview();
+  showToast(`"${skillName}" added to your CV skills.`);
+}
+
 function handleExportResume() {
   if (!state.cv) { showToast('No CV data to export.'); return; }
   const md = `# ${state.cv.fullName}\n## ${state.cv.title}\n\n**Skills**: ${state.cv.skills}\n\n${state.cv.body}`;
@@ -966,7 +984,13 @@ function renderMatchResults(analysis) {
   const strengthsList = document.getElementById('match-strengths-list');
   const tipsList = document.getElementById('match-tips-list');
 
-  gapsList.innerHTML = (analysis.gaps || []).map(g => `<li>${g}</li>`).join('');
+  gapsList.innerHTML = (analysis.gaps || []).map(g => {
+    const skillName = g.replace(/^[^a-zA-Z]+/, '').split(/[^a-zA-Z0-9+#.]+/)[0];
+    return `<li>${g} <button type="button" class="btn btn-xs btn-outline add-missing-skill" data-skill="${skillName}">+ Add to CV</button></li>`;
+  }).join('');
+  gapsList.querySelectorAll('.add-missing-skill').forEach(btn => {
+    btn.addEventListener('click', () => addMissingSkill(btn.dataset.skill));
+  });
   strengthsList.innerHTML = (analysis.strengths || []).map(s => `<li>${s}</li>`).join('');
   tipsList.innerHTML = (analysis.tips || []).map(t => `<li>${t}</li>`).join('');
 }
