@@ -1170,14 +1170,24 @@ function renderKanbanBoard() {
       const dateBadge = job.appliedDate
         ? `<span style="font-size:0.6rem;color:var(--text-muted)">📅 ${job.appliedDate}</span>`
         : '';
+      const salaryInfo = job.salary ? `<span style="font-size:0.6rem;color:var(--color-success)">💰 ${job.salary}</span>` : '';
+      const logoPlaceholder = `<span class="kanban-logo" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.05);font-size:0.55rem;font-weight:700;color:var(--text-muted);flex-shrink:0">${job.company.charAt(0).toUpperCase()}</span>`;
       const statusBtns = otherStatuses.slice(0, 3).map(s => `
         <button class="btn btn-xs btn-secondary kanban-mobile-btn" data-id="${job.id}" data-newstatus="${s}" style="font-size:0.6rem;padding:0.15rem 0.3rem" title="Move to ${s}">${s[0]}</button>
       `).join('');
       return `
         <div class="kanban-card" draggable="true" data-id="${job.id}" data-status="${status}">
-          <h5>${job.title}</h5>
-          <div class="kanban-company">${job.company}</div>
-          ${dateBadge}
+          <div style="display:flex;align-items:flex-start;gap:0.5rem">
+            ${logoPlaceholder}
+            <div style="flex:1;min-width:0">
+              <h5 style="margin:0;font-size:0.85rem">${job.title}</h5>
+              <div class="kanban-company" style="font-size:0.75rem;color:var(--text-secondary)">${job.company}</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-top:0.35rem">
+            ${dateBadge}
+            ${salaryInfo}
+          </div>
           ${scoreHtml}
           <div class="kanban-mobile-actions" style="display:flex;gap:0.25rem;margin-top:0.35rem">
             ${statusBtns}
