@@ -398,20 +398,27 @@ async function handleScanPortals() {
     const logEntry = document.createElement('div');
     logEntry.className = 'log-entry';
 
-    scanStatus.innerText = `Scanning ${config?.name || portal}...`;
-    scanPercent.innerText = `${percent}%`;
-    progressFill.style.width = `${percent}%`;
+    const progressSteps = [
+      { label: `Connecting to ${config?.name || portal}...`, delay: 200 },
+      { label: `Building search query from CV...`, delay: 250 },
+      { label: `Fetching results from ${config?.name || portal}...`, delay: 300 },
+      { label: `Filtering matches by skills...`, delay: 200 }
+    ];
 
-    const time = new Date().toLocaleTimeString();
-    logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-info">${config?.name || portal}: Searching...</span>`;
-    scanLog.appendChild(logEntry);
-    scanLog.scrollTop = scanLog.scrollHeight;
-
-    // Simulate network delay
-    await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+    for (const step of progressSteps) {
+      scanStatus.innerText = step.label;
+      const stepEntry = document.createElement('div');
+      stepEntry.className = 'log-entry';
+      stepEntry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-info">⟳ ${step.label}</span>`;
+      scanLog.appendChild(stepEntry);
+      scanLog.scrollTop = scanLog.scrollHeight;
+      progressFill.style.width = `${percent}%`;
+      await new Promise(r => setTimeout(r, step.delay));
+    }
 
     try {
       let results = simulatePortalSearch(portal, state.cv, desiredRole, 3);
+      const matchedCount = results.filter(r => r.matchScore >= 70).length;
       results.forEach(r => {
         r.source = portal;
         allResults.push(r);
@@ -419,7 +426,7 @@ async function handleScanPortals() {
 
       const okEntry = document.createElement('div');
       okEntry.className = 'log-entry';
-      okEntry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-ok">✓ ${config?.name || portal}: ${results.length} jobs found</span>`;
+      okEntry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-ok">✓ ${config?.name || portal}: ${results.length} found, ${matchedCount} high-match (≥70%)</span>`;
       scanLog.appendChild(okEntry);
     } catch (err) {
       const errEntry = document.createElement('div');
@@ -430,22 +437,30 @@ async function handleScanPortals() {
     scanLog.scrollTop = scanLog.scrollHeight;
   }
 
+  const summaryEntry = document.createElement('div');
+  summaryEntry.className = 'log-entry';
+  summaryEntry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-ok">✓ Scan complete — ${allResults.length} total jobs from ${activePortals.length} portal(s)</span>`;
+  scanLog.appendChild(summaryEntry);
+  scanLog.scrollTop = scanLog.scrollHeight;
+
   scanStatus.innerText = 'Scan complete!';
   scanPercent.innerText = '100%';
   progressFill.style.width = '100%';
 
   // Render results
   if (allResults.length > 0) {
-    resultsCount.innerText = `${allResults.length} jobs found`;
-    resultsGrid.innerHTML = allResults.map(job => {
+    const highMatch = allResults.filter(r => r.matchScore >= 70).length;
+    resultsCount.innerText = `${allResults.length} jobs (${highMatch} high-match)`;
+    resultsGrid.innerHTML = allResults.sort((a, b) => b.matchScore - a.matchScore).map(job => {
       const sourceClass = `source-${job.source}`;
       const sourceNames = { linkedin: 'LinkedIn', indeed: 'Indeed', torre: 'Torre.co', computrabajo: 'Computrabajo' };
+      const matchLevel = job.matchScore >= 80 ? 'badge-success' : job.matchScore >= 60 ? 'badge-warning' : 'badge-secondary';
       return `
         <div class="search-result-card">
           <span class="source-badge ${sourceClass}">${sourceNames[job.source] || job.source}</span>
           <h4>${job.title}</h4>
           <span class="company-name">${job.company} · ${job.location}</span>
-          <span class="match-indicator"><i class="fa-solid fa-circle-check"></i> ${job.matchScore}% Match</span>
+          <span class="match-indicator"><span class="badge ${matchLevel}">${job.matchScore}% Match</span></span>
           <p class="text-xs text-muted">${job.snippet}</p>
           <div class="result-actions">
             <button class="btn btn-primary btn-xs btn-import-result" data-title="${job.title}" data-company="${job.company}" data-source="${job.source}">
