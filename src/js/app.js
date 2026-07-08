@@ -1,5 +1,6 @@
 import { defaultCV, defaultJobs } from './data.js';
 import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep } from './ai.js';
+import { buildPortalUrl, simulatePortalSearch, getAllPortalKeys, getPortalConfig } from './connectors.js';
 
 // Application State
 let state = {
