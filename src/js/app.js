@@ -12,7 +12,8 @@ let state = {
     model: ''
   },
   selectedJobId: null,
-  statusChart: null
+  statusChart: null,
+  skillWeights: {}
 };
 
 // ==========================================================================
@@ -44,6 +45,9 @@ function initLocalStorage() {
   }
   if (storedJobs) state.jobs = JSON.parse(storedJobs);
   if (storedConfig) state.apiConfig = JSON.parse(storedConfig);
+
+  const storedWeights = localStorage.getItem('botvalia_skill_weights');
+  if (storedWeights) state.skillWeights = JSON.parse(storedWeights);
 
   // Default API setup if empty
   if (!state.apiConfig || !state.apiConfig.provider) {
@@ -86,6 +90,9 @@ function setupNavigation() {
       // Special action upon loading certain tabs
       if (targetTab === 'tools') {
         syncToolsTab();
+      }
+      if (targetTab === 'match') {
+        renderSkillWeights();
       }
     });
   });
@@ -138,6 +145,12 @@ function setupEventListeners() {
 
   // Match Action
   document.getElementById('btn-run-match').addEventListener('click', handleCalculateMatch);
+  document.getElementById('btn-reset-weights')?.addEventListener('click', () => {
+    state.skillWeights = {};
+    localStorage.setItem('botvalia_skill_weights', JSON.stringify({}));
+    renderSkillWeights();
+    showToast('Skill weights reset to default.');
+  });
 
   // Subtab navigation within Match Results
   const matchResultPills = document.querySelectorAll('.match-details-tabs .pill');
@@ -1346,6 +1359,35 @@ function updateCharCounter(el) {
   if (remaining < 0) { color = 'var(--color-danger)'; label = `OVER by ${Math.abs(remaining)}`; }
   else if (remaining < 50) { color = 'var(--color-warning)'; }
   counter.innerHTML = `<div class="char-bar"><div class="char-bar-fill" style="width:${pct}%;background:${color};border-radius:4px;height:4px;transition:width 0.2s,background 0.2s"></div></div><span class="char-count-label" style="color:${color}">${label}</span>`;
+}
+
+function renderSkillWeights() {
+  const container = document.getElementById('skill-weights-container');
+  if (!container) return;
+  const skills = (state.cv?.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (skills.length === 0) {
+    container.innerHTML = '<p class="text-xs text-muted">No skills found in your CV. Add skills in My CV Profile first.</p>';
+    return;
+  }
+  const weights = state.skillWeights || {};
+  container.innerHTML = skills.map(skill => {
+    const w = weights[skill] !== undefined ? weights[skill] : 50;
+    return `
+      <div class="weight-item">
+        <label class="weight-label">${skill}</label>
+        <input type="range" class="weight-slider" min="1" max="100" value="${w}" data-skill="${skill}">
+        <span class="weight-value" id="weight-val-${skill.replace(/\s+/g, '_')}">${w}</span>
+      </div>`;
+  }).join('');
+  container.querySelectorAll('.weight-slider').forEach(slider => {
+    slider.addEventListener('input', () => {
+      const val = parseInt(slider.value);
+      state.skillWeights[slider.dataset.skill] = val;
+      localStorage.setItem('botvalia_skill_weights', JSON.stringify(state.skillWeights));
+      const valSpan = document.getElementById('weight-val-' + slider.dataset.skill.replace(/\s+/g, '_'));
+      if (valSpan) valSpan.textContent = val;
+    });
+  });
 }
 
 function renderSkillsCloud() {
