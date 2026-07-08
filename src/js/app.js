@@ -914,6 +914,9 @@ function renderJobsTab() {
     const sourceBadge = job.source && sourceNames[job.source]
       ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem">${sourceNames[job.source]}</span>`
       : '';
+    const appliedBadge = job.appliedDate
+      ? `<span style="font-size:0.65rem;color:var(--text-muted)">📅 ${job.appliedDate}</span>`
+      : '';
 
     return `
       <div class="job-card" data-id="${job.id}">
@@ -923,6 +926,7 @@ function renderJobsTab() {
             <strong>${job.company}</strong>
             ${sourceBadge}
             <span class="badge ${statusLevel}">${job.status}</span>
+            ${appliedBadge}
             ${scoreBadge}
           </div>
         </div>
@@ -1163,6 +1167,9 @@ function renderKanbanBoard() {
       const scoreHtml = job.matchScore !== undefined
         ? `<span class="kanban-score"><span class="badge ${job.matchScore > 80 ? 'badge-success' : job.matchScore > 50 ? 'badge-warning' : 'badge-danger'}" style="font-size:0.65rem">${job.matchScore}%</span></span>`
         : '';
+      const dateBadge = job.appliedDate
+        ? `<span style="font-size:0.6rem;color:var(--text-muted)">📅 ${job.appliedDate}</span>`
+        : '';
       const statusBtns = otherStatuses.slice(0, 3).map(s => `
         <button class="btn btn-xs btn-secondary kanban-mobile-btn" data-id="${job.id}" data-newstatus="${s}" style="font-size:0.6rem;padding:0.15rem 0.3rem" title="Move to ${s}">${s[0]}</button>
       `).join('');
@@ -1170,6 +1177,7 @@ function renderKanbanBoard() {
         <div class="kanban-card" draggable="true" data-id="${job.id}" data-status="${status}">
           <h5>${job.title}</h5>
           <div class="kanban-company">${job.company}</div>
+          ${dateBadge}
           ${scoreHtml}
           <div class="kanban-mobile-actions" style="display:flex;gap:0.25rem;margin-top:0.35rem">
             ${statusBtns}
@@ -1192,6 +1200,9 @@ function renderKanbanBoard() {
       const newStatus = btn.getAttribute('data-newstatus');
       const job = state.jobs.find(j => j.id === jobId);
       if (!job || job.status === newStatus) return;
+      if (newStatus === 'Applied' && !job.appliedDate) {
+        job.appliedDate = new Date().toISOString().split('T')[0];
+      }
       job.status = newStatus;
       localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
       renderKanbanBoard();
@@ -1253,12 +1264,23 @@ function handleDrop(e) {
   const job = state.jobs.find(j => j.id === jobId);
   if (!job || job.status === newStatus) return;
 
+  // Track application date when moved to Applied
+  if (newStatus === 'Applied' && !job.appliedDate) {
+    job.appliedDate = new Date().toISOString().split('T')[0];
+  }
   job.status = newStatus;
   localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
   renderKanbanBoard();
   renderJobsTab();
   renderDashboard();
   showToast(`"${job.title}" moved to ${newStatus}`);
+}
+
+// Also track in the drag-drop handler and import
+function trackAppliedDate(job) {
+  if (job.status === 'Applied' && !job.appliedDate) {
+    job.appliedDate = new Date().toISOString().split('T')[0];
+  }
 }
 
 // Syncing functions across tabs
