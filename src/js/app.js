@@ -198,6 +198,12 @@ function setupEventListeners() {
     renderCalendar();
   });
 
+  // Data Management
+  document.getElementById('btn-export-data')?.addEventListener('click', handleExportData);
+  document.getElementById('btn-import-data')?.addEventListener('click', () => document.getElementById('import-file-input').click());
+  document.getElementById('import-file-input')?.addEventListener('change', handleImportData);
+  document.getElementById('btn-reset-app')?.addEventListener('click', handleResetApp);
+
   // Modal close
   document.getElementById('btn-close-modal')?.addEventListener('click', () => {
     document.getElementById('calendar-event-modal').classList.add('hidden');
@@ -634,6 +640,62 @@ function handleSettingsSubmit(e) {
   
   updateAPIIndicator();
   showToast("AI configuration saved.");
+}
+
+// ==========================================================================
+// DATA MANAGEMENT (Backup, Restore, Reset)
+// ==========================================================================
+function handleExportData() {
+  const data = {
+    cv: state.cv,
+    jobs: state.jobs,
+    config: state.apiConfig,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `botvalia-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Data exported successfully!');
+}
+
+function handleImportData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+      if (data.cv) { state.cv = data.cv; localStorage.setItem('botvalia_cv', JSON.stringify(data.cv)); }
+      if (data.jobs) { state.jobs = data.jobs; localStorage.setItem('botvalia_jobs', JSON.stringify(data.jobs)); }
+      if (data.config) { state.apiConfig = data.config; localStorage.setItem('botvalia_config', JSON.stringify(data.config)); }
+      renderAll();
+      showToast('Data imported successfully!');
+    } catch (err) {
+      showToast('Invalid backup file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function handleResetApp() {
+  if (confirm('Are you sure you want to reset ALL data? This will clear your CV, jobs, and settings permanently.')) {
+    if (confirm('This cannot be undone. Proceed?')) {
+      localStorage.removeItem('botvalia_cv');
+      localStorage.removeItem('botvalia_jobs');
+      localStorage.removeItem('botvalia_config');
+      state.cv = null;
+      state.jobs = [];
+      state.apiConfig = { provider: 'mock', key: '', model: '' };
+      state.selectedJobId = null;
+      renderAll();
+      showToast('All data has been reset.');
+    }
+  }
 }
 
 function updateSettingsFieldsVisibility(provider) {

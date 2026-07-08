@@ -1056,6 +1056,27 @@
                 </div>
               </div>
             </div>
+            <!-- Data Management -->
+            <div class="card mt-6">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-database"></i> Data Management</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-actions" style="flex-wrap:wrap">
+                  <button id="btn-export-data" class="btn btn-secondary">
+                    <i class="fa-solid fa-download"></i> Export All Data
+                  </button>
+                  <button id="btn-import-data" class="btn btn-secondary">
+                    <i class="fa-solid fa-upload"></i> Import Data
+                  </button>
+                  <input type="file" id="import-file-input" accept=".json" hidden>
+                  <button id="btn-reset-app" class="btn btn-danger-outline">
+                    <i class="fa-solid fa-trash-can"></i> Reset App
+                  </button>
+                </div>
+                <p class="text-xs text-muted mt-4">Export downloads all CV, jobs, and settings as a JSON file. Import restores them. Reset clears all local data.</p>
+              </div>
+            </div>
           </div>
         </section>
 
