@@ -1,5 +1,5 @@
 import { defaultCV, defaultJobs } from './data.js';
-import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep, generateMessage } from './ai.js';
+import { calculateMatch, optimizeCV, generateCoverLetter, generateInterviewPrep, generateMessage, enhanceCVFields } from './ai.js';
 import { buildPortalUrl, simulatePortalSearch, getAllPortalKeys, getPortalConfig } from './connectors.js';
 
 // Application State
@@ -367,6 +367,15 @@ async function handleFileSelect(file) {
       if (extracted.fullName) document.getElementById('cv-full-name').value = extracted.fullName;
       if (extracted.title) document.getElementById('cv-title').value = extracted.title;
       if (extracted.skills) document.getElementById('cv-skills').value = extracted.skills;
+      // Try AI-enhanced extraction asynchronously
+      if (state.apiConfig && state.apiConfig.provider !== 'mock') {
+        enhanceCVFields(text, extracted, state.apiConfig).then(aiExtracted => {
+          if (aiExtracted.fullName) document.getElementById('cv-full-name').value = aiExtracted.fullName;
+          if (aiExtracted.title) document.getElementById('cv-title').value = aiExtracted.title;
+          if (aiExtracted.skills) document.getElementById('cv-skills').value = aiExtracted.skills;
+          showToast('AI-enhanced CV fields applied.');
+        }).catch(() => {});
+      }
       showToast(`CV content extracted from ${file.name}`);
     }
   } catch (err) {

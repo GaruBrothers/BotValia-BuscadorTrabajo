@@ -150,6 +150,77 @@ Provide the output in clean, readable Markdown format with sections for Question
  * Generates optimized search keywords and queries based on CV content.
  * Extracts key skills, roles, and technologies for portal search.
  */
+/**
+ * Uses AI to enhance/refine CV field extraction (name, title, skills) from raw text.
+ */
+export async function enhanceCVFields(rawText, currentFields, apiConfig) {
+  const prompt = `You are a CV parser. From the following raw CV text, extract and return ONLY a JSON object with three keys: "fullName" (the person's name), "title" (their professional headline), and "skills" (comma-separated list of top technical skills). Use this extracted data to refine these existing guesses: Name: "${currentFields.fullName}", Title: "${currentFields.title}", Skills: "${currentFields.skills}".
+
+Raw CV text:
+${rawText.substring(0, 3000)}
+
+Return ONLY the JSON object, no markdown, no code fences.`;
+
+  if (apiConfig && apiConfig.provider === 'gemini' && apiConfig.key) {
+    try {
+      const model = apiConfig.model || 'gemini-2.0-flash-lite';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiConfig.key}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      if (!resp.ok) throw new Error(`Gemini API error: ${resp.status}`);
+      const data = await resp.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleaned = text.replace(/```[a-z]*\n?/gi, '').trim();
+      return JSON.parse(cleaned);
+    } catch (e) {
+      console.warn('AI enhancement failed, using heuristic fields:', e);
+      return currentFields;
+    }
+  }
+
+  if (apiConfig && apiConfig.provider === 'openai' && apiConfig.key) {
+    try {
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.key}` },
+        body: JSON.stringify({ model: apiConfig.model || 'gpt-4o-mini', messages: [{ role: 'user', content: prompt }], temperature: 0.1 })
+      });
+      if (!resp.ok) throw new Error(`OpenAI API error: ${resp.status}`);
+      const data = await resp.json();
+      const text = data?.choices?.[0]?.message?.content || '';
+      const cleaned = text.replace(/```[a-z]*\n?/gi, '').trim();
+      return JSON.parse(cleaned);
+    } catch (e) {
+      console.warn('AI enhancement failed, using heuristic fields:', e);
+      return currentFields;
+    }
+  }
+
+  // Mock mode: simulate smarter extraction
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+      const mockResult = { ...currentFields };
+      const titleKeywords = ['senior', 'junior', 'lead', 'engineer', 'developer', 'architect', 'manager', 'fullstack', 'frontend', 'backend', 'devops', 'data', 'cloud', 'software', 'specialist'];
+      for (const line of lines) {
+        const lower = line.toLowerCase();
+        const count = titleKeywords.filter(k => lower.includes(k)).length;
+        if (count >= 2 && line.split(' ').length >= 3 && !/^#/.test(line)) {
+          mockResult.title = line.replace(/^[-*•]\s*/, '').replace(/[|].*$/, '').trim();
+          break;
+        }
+      }
+      const tech = ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Docker', 'AWS', 'PostgreSQL', 'Git', 'GraphQL', 'CSS', 'HTML', 'MongoDB', 'Redis', 'Next.js', 'Vue', 'Angular', 'Java', 'C#', 'Go', 'Rust', 'Kubernetes', 'Azure', 'GCP', 'Terraform', 'Jenkins', 'Linux'];
+      const found = tech.filter(t => rawText.toLowerCase().includes(t.toLowerCase()));
+      if (found.length) mockResult.skills = [...new Set(found)].slice(0, 15).join(', ');
+      resolve(mockResult);
+    }, 600);
+  });
+}
+
 export async function generateSearchQuery(cv, apiConfig) {
   const prompt = `You are a job search optimization expert. Given the following CV information, generate an optimized set of search keywords and queries for job portals.
 
