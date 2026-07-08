@@ -182,6 +182,23 @@ function setupEventListeners() {
   // Scan Portals Button
   document.getElementById('btn-scan-portals').addEventListener('click', handleScanPortals);
 
+  // Calendar navigation
+  document.getElementById('btn-prev-month')?.addEventListener('click', () => {
+    calendarMonth--;
+    if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+    renderCalendar();
+  });
+  document.getElementById('btn-next-month')?.addEventListener('click', () => {
+    calendarMonth++;
+    if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+    renderCalendar();
+  });
+
+  // Modal close
+  document.getElementById('btn-close-modal')?.addEventListener('click', () => {
+    document.getElementById('calendar-event-modal').classList.add('hidden');
+  });
+
   // Source filter for Job Tracker
   document.getElementById('filter-source')?.addEventListener('change', () => renderJobsTab());
 
@@ -507,6 +524,7 @@ async function handleScanPortals() {
         renderJobsTab();
         renderDashboard();
         renderKanbanBoard();
+        renderCalendar();
         showToast(`"${title}" imported to Job Tracker.`);
       });
     });
@@ -552,6 +570,7 @@ function handleJobSubmit(e) {
   renderJobsTab();
   renderDashboard();
   renderKanbanBoard();
+  renderCalendar();
 }
 
 function resetJobForm() {
@@ -591,6 +610,7 @@ function handleJobDelete(jobId) {
     renderJobsTab();
     renderDashboard();
     renderKanbanBoard();
+    renderCalendar();
     showToast("Job removed.");
   }
 }
@@ -822,6 +842,7 @@ function renderAll() {
   renderSettingsForm();
   renderDashboard();
   renderKanbanBoard();
+  renderCalendar();
 }
 
 function updateAPIIndicator() {
@@ -1301,6 +1322,212 @@ function trackAppliedDate(job) {
     job.appliedDate = new Date().toISOString().split('T')[0];
   }
 }
+
+// ==========================================================================
+// INTERVIEW CALENDAR
+// ==========================================================================
+let calendarMonth = new Date().getMonth();
+let calendarYear = new Date().getFullYear();
+
+function renderCalendar() {
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  document.getElementById('calendar-month-label').innerText = `${monthNames[calendarMonth]} ${calendarYear}`;
+
+  const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+  const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(calendarYear, calendarMonth, 0).getDate();
+  const today = new Date();
+
+  const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  let html = dayHeaders.map(d => `<div class="calendar-header-cell">${d}</div>`).join('');
+
+  // Build interview map
+  const interviewMap = {};
+  state.jobs.forEach(job => {
+    if (job.interviewDate) {
+      const dateKey = job.interviewDate;
+      if (!interviewMap[dateKey]) interviewMap[dateKey] = [];
+      interviewMap[dateKey].push(job);
+    }
+  });
+
+  // Previous month days
+  const prevMonth = calendarMonth === 0 ? 11 : calendarMonth - 1;
+  const prevYear = calendarMonth === 0 ? calendarYear - 1 : calendarYear;
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const day = daysInPrevMonth - i;
+    html += `<div class="calendar-cell other-month"><div class="day-number">${day}</div></div>`;
+  }
+
+  // Current month days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isToday = today.getFullYear() === calendarYear && today.getMonth() === calendarMonth && today.getDate() === day;
+    const events = interviewMap[dateStr] || [];
+
+    html += `<div class="calendar-cell ${isToday ? 'today' : ''}" data-date="${dateStr}">
+      <div class="day-number">${day}</div>
+      ${events.slice(0, 3).map(job => `<div class="calendar-event" data-job-id="${job.id}">${job.interviewTime || ''} ${job.company}</div>`).join('')}
+      ${events.length > 3 ? `<div class="calendar-event" style="background:transparent;border:none;color:var(--text-muted)">+${events.length - 3} more</div>` : ''}
+    </div>`;
+  }
+
+  // Next month days to fill grid
+  const totalCells = firstDay + daysInMonth;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for (let day = 1; day <= remaining; day++) {
+    html += `<div class="calendar-cell other-month"><div class="day-number">${day}</div></div>`;
+  }
+
+  document.getElementById('calendar-grid').innerHTML = html;
+
+  // Bind event clicks
+  document.querySelectorAll('.calendar-event').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const jobId = el.getAttribute('data-job-id');
+      const job = state.jobs.find(j => j.id === jobId);
+      if (!job) return;
+      document.getElementById('modal-event-title').innerText = `Interview: ${job.title}`;
+      document.getElementById('modal-event-body').innerHTML = `
+        <p><strong>Company:</strong> ${job.company}</p>
+        <p><strong>Date:</strong> ${job.interviewDate || 'Not set'}</p>
+        <p><strong>Time:</strong> ${job.interviewTime || 'Not specified'}</p>
+        <p><strong>Notes:</strong> ${job.interviewNotes || 'None'}</p>
+        <div class="form-actions mt-4">
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('job-id').value='${job.id}';document.getElementById('nav-jobs').click()">
+            <i class="fa-solid fa-pen"></i> Edit in Job Tracker
+          </button>
+        </div>
+      `;
+      document.getElementById('calendar-event-modal').classList.remove('hidden');
+    });
+  });
+
+  // Highlight dates with interviews
+  document.querySelectorAll('.calendar-cell').forEach(cell => {
+    if (cell.querySelector('.calendar-event')) {
+      cell.style.borderColor = 'rgba(37, 99, 235, 0.3)';
+    }
+  });
+
+  // Count interviews
+  const totalInterviews = Object.values(interviewMap).flat().length;
+  document.getElementById('calendar-interview-count').innerText = `${totalInterviews} interview${totalInterviews !== 1 ? 's' : ''} scheduled`;
+
+  // Render upcoming list
+  renderUpcomingInterviews(interviewMap);
+
+  // Countdown
+  renderCountdownWidget();
+}
+
+function renderUpcomingInterviews(interviewMap) {
+  const container = document.getElementById('calendar-upcoming-list');
+  const today = new Date().toISOString().split('T')[0];
+  const upcoming = [];
+
+  Object.entries(interviewMap).forEach(([date, jobs]) => {
+    if (date >= today) {
+      jobs.forEach(job => upcoming.push({ ...job, date }));
+    }
+  });
+
+  upcoming.sort((a, b) => a.date.localeCompare(b.date) || (a.interviewTime || '').localeCompare(b.interviewTime || ''));
+
+  if (upcoming.length === 0) {
+    container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-calendar-check"></i><p>No upcoming interviews scheduled.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = upcoming.slice(0, 10).map(job => {
+    const d = new Date(job.date + 'T' + (job.interviewTime || '00:00'));
+    const day = d.getDate();
+    const month = d.toLocaleString('default', { month: 'short' });
+    return `
+      <div class="upcoming-item">
+        <div class="upcoming-date">
+          <span class="day">${day}</span>
+          <span class="month">${month}</span>
+        </div>
+        <div class="upcoming-info">
+          <h5>${job.title}</h5>
+          <span>${job.company} ${job.interviewTime ? '· ' + job.interviewTime : ''}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCountdownWidget() {
+  const container = document.getElementById('calendar-upcoming-card');
+  let countdownEl = document.getElementById('countdown-widget');
+  if (!countdownEl) {
+    countdownEl = document.createElement('div');
+    countdownEl.id = 'countdown-widget';
+    countdownEl.className = 'card mb-4';
+    container.parentNode.insertBefore(countdownEl, container);
+  }
+
+  const now = new Date();
+  const upcomingJobs = state.jobs.filter(j => j.interviewDate);
+  let nextJob = null;
+  let nextDate = null;
+
+  upcomingJobs.forEach(job => {
+    const d = new Date(job.interviewDate + 'T' + (job.interviewTime || '09:00'));
+    if (d > now) {
+      if (!nextDate || d < nextDate) {
+        nextDate = d;
+        nextJob = job;
+      }
+    }
+  });
+
+  if (!nextJob) {
+    countdownEl.innerHTML = `
+      <div class="card-body text-center" style="color:var(--text-muted);font-size:0.85rem">
+        <i class="fa-solid fa-clock"></i> No upcoming interviews
+      </div>
+    `;
+    return;
+  }
+
+  const diff = nextDate - now;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  countdownEl.innerHTML = `
+    <div class="card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <span style="font-size:0.75rem;color:var(--text-muted)">Next Interview</span>
+          <h4 style="margin:0.25rem 0">${nextJob.title}</h4>
+          <span style="font-size:0.8rem;color:var(--text-secondary)">${nextJob.company} · ${nextJob.interviewDate} ${nextJob.interviewTime || ''}</span>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:2rem;font-weight:800;color:var(--color-primary)">${days}d ${hours}h ${mins}m</div>
+          <span style="font-size:0.7rem;color:var(--text-muted)">remaining</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Update every minute
+  setTimeout(renderCountdownWidget, 60000);
+}
+
+// Modal close
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.add('hidden');
+  }
+});
+
+// Expose for inline onclick
+window.renderCalendar = renderCalendar;
+window.closeModal = () => document.getElementById('calendar-event-modal').classList.add('hidden');
 
 // Syncing functions across tabs
 function syncToolsTab() {
