@@ -409,22 +409,68 @@
                   </div>
                   <div class="form-group">
                     <label for="job-description">Job Description / Requirements</label>
-                    <textarea id="job-description" rows="10" placeholder="Paste the job requirements, responsibilities, and qualifications listed in the description..." required></textarea>
+                    <textarea id="job-description" rows="6" placeholder="Paste the job requirements, responsibilities, and qualifications listed in the description..." required></textarea>
                   </div>
-                  <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                    <div class="form-group">
-                      <label for="job-interview-date">Interview Date</label>
-                      <input type="date" id="job-interview-date">
+                  <details class="form-details">
+                    <summary class="text-xs text-muted" style="cursor:pointer">Advanced Fields (Recruiter, Salary, Notes)</summary>
+                    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.5rem">
+                      <div class="form-group">
+                        <label for="job-recruiter-name">Recruiter Name</label>
+                        <input type="text" id="job-recruiter-name" placeholder="e.g. Maria Santos">
+                      </div>
+                      <div class="form-group">
+                        <label for="job-recruiter-email">Recruiter Email</label>
+                        <input type="email" id="job-recruiter-email" placeholder="maria@company.com">
+                      </div>
                     </div>
                     <div class="form-group">
-                      <label for="job-interview-time">Interview Time</label>
-                      <input type="time" id="job-interview-time">
+                      <label for="job-recruiter-linkedin">Recruiter LinkedIn</label>
+                      <input type="url" id="job-recruiter-linkedin" placeholder="https://linkedin.com/in/...">
                     </div>
-                  </div>
-                  <div class="form-group">
-                    <label for="job-interview-notes">Interview Notes</label>
-                    <textarea id="job-interview-notes" rows="3" placeholder="Meeting link, contact person, preparation notes..."></textarea>
-                  </div>
+                    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                      <div class="form-group">
+                        <label for="job-salary-amount">Salary</label>
+                        <input type="number" id="job-salary-amount" placeholder="e.g. 80000" min="0">
+                      </div>
+                      <div class="form-group">
+                        <label for="job-salary-currency">Currency</label>
+                        <select id="job-salary-currency">
+                          <option value="USD">USD ($)</option>
+                          <option value="EUR">EUR (€)</option>
+                          <option value="GBP">GBP (£)</option>
+                          <option value="COP">COP ($)</option>
+                          <option value="MXN">MXN ($)</option>
+                          <option value="BRL">BRL (R$)</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="job-salary-period">Period</label>
+                        <select id="job-salary-period">
+                          <option value="yearly">Yearly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="hourly">Hourly</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="job-notepad">Preparation Notes</label>
+                      <textarea id="job-notepad" rows="3" placeholder="Research notes, questions for recruiter, key selling points..."></textarea>
+                    </div>
+                    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                      <div class="form-group">
+                        <label for="job-interview-date">Interview Date</label>
+                        <input type="date" id="job-interview-date">
+                      </div>
+                      <div class="form-group">
+                        <label for="job-interview-time">Interview Time</label>
+                        <input type="time" id="job-interview-time">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="job-interview-notes">Interview Notes</label>
+                      <textarea id="job-interview-notes" rows="3" placeholder="Meeting link, contact person, preparation notes..."></textarea>
+                    </div>
+                  </details>
                   <div class="form-actions">
                     <button type="submit" id="btn-save-job" class="btn btn-primary btn-block">
                       <i class="fa-solid fa-plus-circle"></i> Add Job to Tracker
@@ -441,13 +487,19 @@
             <div class="card col-2">
               <div class="card-header">
                 <h3><i class="fa-solid fa-folder-open"></i> Saved Vacancies</h3>
-                <div class="flex-row items-center gap-4">
-                  <select id="filter-source" class="select-inline" style="min-width:120px">
+                <div class="flex-row items-center gap-4 flex-wrap">
+                  <input type="search" id="job-search-input" class="input-sm" placeholder="🔍 Search by title, company..." style="min-width:180px">
+                  <select id="filter-source" class="select-inline" style="min-width:100px">
                     <option value="">All sources</option>
                     <option value="linkedin">LinkedIn</option>
                     <option value="indeed">Indeed</option>
                     <option value="torre">Torre.co</option>
                     <option value="computrabajo">Computrabajo</option>
+                  </select>
+                  <select id="job-sort-select" class="select-inline" style="min-width:100px">
+                    <option value="date">Sort by Date</option>
+                    <option value="score">Sort by Match</option>
+                    <option value="company">Sort by Company</option>
                   </select>
                 </div>
               </div>
@@ -1180,6 +1232,10 @@
                   </button>
                 </div>
                 <p class="text-xs text-muted mt-4">Export downloads all CV, jobs, and settings as a JSON file. Import restores them. Reset clears all local data.</p>
+                <div id="storage-audit" class="mt-4 p-3" style="background:hsla(0,0%,0%,0.2);border-radius:6px">
+                  <h5 class="text-xs">LocalStorage Usage</h5>
+                  <div id="storage-audit-details"></div>
+                </div>
               </div>
             </div>
           </div>

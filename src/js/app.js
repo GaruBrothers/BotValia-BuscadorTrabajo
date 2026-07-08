@@ -94,6 +94,9 @@ function setupNavigation() {
       if (targetTab === 'match') {
         renderSkillWeights();
       }
+      if (targetTab === 'settings') {
+        renderStorageAudit();
+      }
     });
   });
 
@@ -275,6 +278,8 @@ function setupEventListeners() {
 
   // Source filter for Job Tracker
   document.getElementById('filter-source')?.addEventListener('change', () => renderJobsTab());
+  document.getElementById('job-search-input')?.addEventListener('input', () => renderJobsTab());
+  document.getElementById('job-sort-select')?.addEventListener('change', () => renderJobsTab());
 
   // Clear Results Button
   document.getElementById('btn-clear-results').addEventListener('click', () => {
@@ -869,15 +874,23 @@ function handleJobSubmit(e) {
     description: document.getElementById('job-description').value.trim(),
     interviewDate: interviewDate || null,
     interviewTime: interviewTime || null,
-    interviewNotes: interviewNotes || null
+    interviewNotes: interviewNotes || null,
+    recruiterName: document.getElementById('job-recruiter-name')?.value.trim() || null,
+    recruiterEmail: document.getElementById('job-recruiter-email')?.value.trim() || null,
+    recruiterLinkedin: document.getElementById('job-recruiter-linkedin')?.value.trim() || null,
+    salaryAmount: document.getElementById('job-salary-amount')?.value || null,
+    salaryCurrency: document.getElementById('job-salary-currency')?.value || 'USD',
+    salaryPeriod: document.getElementById('job-salary-period')?.value || 'yearly',
+    notepad: document.getElementById('job-notepad')?.value.trim() || null,
+    appliedDate: jobId ? undefined : (document.getElementById('job-status').value === 'Applied' ? new Date().toISOString().split('T')[0] : null)
   };
 
   if (jobId) {
-    // Edit existing
-    state.jobs = state.jobs.map(j => j.id === jobId ? jobData : j);
+    const existing = state.jobs.find(j => j.id === jobId);
+    if (existing) { jobData.appliedDate = existing.appliedDate; jobData.source = existing.source; jobData.matchScore = existing.matchScore; jobData.matchDetails = existing.matchDetails; }
+    state.jobs = state.jobs.map(j => j.id === jobId ? { ...j, ...jobData } : j);
     showToast("Job vacancy modified.");
   } else {
-    // Add new
     state.jobs.push(jobData);
     showToast("New job added successfully.");
   }
@@ -911,6 +924,14 @@ function handleJobEdit(jobId) {
   document.getElementById('job-interview-date').value = job.interviewDate || '';
   document.getElementById('job-interview-time').value = job.interviewTime || '';
   document.getElementById('job-interview-notes').value = job.interviewNotes || '';
+  // Advanced fields
+  document.getElementById('job-recruiter-name').value = job.recruiterName || '';
+  document.getElementById('job-recruiter-email').value = job.recruiterEmail || '';
+  document.getElementById('job-recruiter-linkedin').value = job.recruiterLinkedin || '';
+  document.getElementById('job-salary-amount').value = job.salaryAmount || '';
+  document.getElementById('job-salary-currency').value = job.salaryCurrency || 'USD';
+  document.getElementById('job-salary-period').value = job.salaryPeriod || 'yearly';
+  document.getElementById('job-notepad').value = job.notepad || '';
 
   document.getElementById('job-form-title').innerHTML = '<i class="fa-solid fa-edit"></i> Edit Job Offer';
   document.getElementById('btn-save-job').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
@@ -1659,7 +1680,15 @@ function renderJobsTab() {
 
   // Draw list cards
   const filterSource = document.getElementById('filter-source')?.value || '';
-  const filteredJobs = filterSource ? state.jobs.filter(j => j.source === filterSource) : state.jobs;
+  const searchQuery = (document.getElementById('job-search-input')?.value || '').toLowerCase();
+  const sortBy = document.getElementById('job-sort-select')?.value || 'date';
+  let filteredJobs = filterSource ? state.jobs.filter(j => j.source === filterSource) : [...state.jobs];
+  if (searchQuery) {
+    filteredJobs = filteredJobs.filter(j => j.title.toLowerCase().includes(searchQuery) || j.company.toLowerCase().includes(searchQuery) || (j.description || '').toLowerCase().includes(searchQuery));
+  }
+  if (sortBy === 'company') filteredJobs.sort((a, b) => a.company.localeCompare(b.company));
+  else if (sortBy === 'score') filteredJobs.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+  else filteredJobs.sort((a, b) => (b.appliedDate || b.id || '').localeCompare(a.appliedDate || a.id || ''));
 
   if (filteredJobs.length === 0) {
     container.innerHTML = `
@@ -1688,6 +1717,17 @@ function renderJobsTab() {
     const appliedBadge = job.appliedDate
       ? `<span style="font-size:0.65rem;color:var(--text-muted)">📅 ${job.appliedDate}</span>`
       : '';
+    const salaryInfo = job.salaryAmount ? `<span style="font-size:0.65rem;color:var(--text-muted)">💰 ${job.salaryAmount} ${job.salaryCurrency || 'USD'}/${job.salaryPeriod || 'yearly'}</span>` : '';
+    const recruiterInfo = job.recruiterName ? `<span style="font-size:0.65rem;color:var(--text-muted)">👤 ${job.recruiterName}</span>` : '';
+
+    // Timeline
+    const timelineSteps = ['Interested', 'Applied', 'Interviewing', 'Offer', 'Rejected'];
+    const currentIdx = timelineSteps.indexOf(job.status);
+    const timelineHtml = `<div class="job-timeline">${timelineSteps.map((step, i) => {
+      const done = i <= currentIdx && job.status !== 'Rejected' && step !== 'Rejected';
+      const isCurrent = step === job.status;
+      return `<span class="tl-step ${done ? 'tl-done' : ''} ${isCurrent ? 'tl-current' : ''}" title="${step}">${done ? '✓' : '○'}</span>`;
+    }).join('<span class="tl-line"></span>')}</div>`;
 
     return `
       <div class="job-card" data-id="${job.id}">
@@ -1698,8 +1738,12 @@ function renderJobsTab() {
             ${sourceBadge}
             <span class="badge ${statusLevel}">${job.status}</span>
             ${appliedBadge}
+            ${salaryInfo}
+            ${recruiterInfo}
             ${scoreBadge}
           </div>
+          ${timelineHtml}
+          ${job.notepad ? `<p class="text-xs text-muted mt-1" style="border-left:2px solid var(--border-color);padding-left:0.4rem">📝 ${job.notepad.substring(0, 100)}${job.notepad.length > 100 ? '...' : ''}</p>` : ''}
         </div>
         <div class="job-actions">
           <button class="btn btn-secondary btn-xs btn-edit-job" data-id="${job.id}">
@@ -1761,6 +1805,35 @@ function renderSettingsForm() {
   }
 
   updateSettingsFieldsVisibility(config.provider);
+  renderStorageAudit();
+}
+
+function renderStorageAudit() {
+  const container = document.getElementById('storage-audit-details');
+  if (!container) return;
+  let total = 0;
+  const items = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('botvalia_')) {
+      const size = new Blob([localStorage.getItem(key)]).size;
+      total += size;
+      items.push({ key, size });
+    }
+  }
+  const limit = 5 * 1024 * 1024; // ~5MB
+  const pct = Math.round((total / limit) * 100);
+  const color = pct > 80 ? 'var(--color-danger)' : pct > 50 ? 'var(--color-warning)' : 'var(--color-success)';
+  container.innerHTML = `
+    <div class="char-bar mt-1"><div class="char-bar-fill" style="width:${Math.min(pct, 100)}%;background:${color};border-radius:4px;height:6px"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem">
+      <span>${(total / 1024).toFixed(1)} KB used</span>
+      <span style="color:${color}">${pct}% of ~5MB</span>
+    </div>
+    <ul style="font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem;padding-left:1rem">
+      ${items.map(i => `<li>${i.key}: ${(i.size / 1024).toFixed(1)} KB</li>`).join('')}
+    </ul>
+    ${pct > 80 ? '<p class="text-xs text-danger mt-1">⚠ Storage nearly full. Consider exporting and resetting old data.</p>' : ''}`;
 }
 
 function renderDashboard() {
@@ -1810,12 +1883,18 @@ function renderDashboard() {
     const dashSrcBadge = job.source && srcNames[job.source]
       ? `<span class="source-badge source-${job.source}" style="font-size:0.65rem"><i class="${srcIcons[job.source]}"></i> ${srcNames[job.source]}</span>`
       : '';
+    // 7-day followup reminder for Applied jobs
+    let followup = '';
+    if (job.status === 'Applied' && job.appliedDate) {
+      const daysSince = Math.floor((Date.now() - new Date(job.appliedDate).getTime()) / 86400000);
+      if (daysSince >= 7) followup = `<span class="badge badge-warning" style="font-size:0.6rem">⏰ ${daysSince}d — Follow up!</span>`;
+    }
 
     return `
       <tr>
-        <td><strong>${job.title}</strong></td>
+        <td><strong>${job.title}</strong> ${followup}</td>
         <td>${job.company} ${dashSrcBadge}</td>
-        <td><span class="badge ${statusLevel}">${job.status}</span></td>
+        <td><select class="dash-status-select input-xs" data-id="${job.id}">${['Interested','Applied','Interviewing','Offer','Rejected'].map(s => `<option ${s === job.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
         <td>${scoreDisplay}</td>
         <td>
           <button class="btn btn-secondary btn-xs btn-dash-analyze" data-id="${job.id}">
@@ -1826,6 +1905,16 @@ function renderDashboard() {
     `;
   }).join('');
 
+  tableBody.querySelectorAll('.dash-status-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const jobId = sel.dataset.id;
+      const job = state.jobs.find(j => j.id === jobId);
+      if (job) { job.status = sel.value; if (sel.value === 'Applied' && !job.appliedDate) job.appliedDate = new Date().toISOString().split('T')[0]; }
+      localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
+      renderDashboard();
+      renderKanbanBoard();
+    });
+  });
   tableBody.querySelectorAll('.btn-dash-analyze').forEach(btn => {
     btn.addEventListener('click', () => {
       const jobId = btn.getAttribute('data-id');

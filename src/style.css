@@ -1969,6 +1969,52 @@ textarea {
 .job-bar.missing { background: hsla(0, 0%, 20%, 0.3); color: var(--text-muted); }
 
 /* ==========================================
+   JOB TIMELINE
+   ========================================== */
+.job-timeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 0.4rem;
+}
+.tl-step {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tl-step.tl-done {
+  background: var(--color-success);
+  color: #fff;
+}
+.tl-step.tl-current {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 6px var(--color-primary);
+}
+.tl-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border-color);
+  min-width: 8px;
+}
+.form-details {
+  margin-top: 0.5rem;
+  background: hsla(0,0%,0%,0.1);
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+.form-details[open] {
+  padding-bottom: 0.5rem;
+}
+
+/* ==========================================
    DASHBOARD SCORE BAR
    ========================================== */
 .dash-score-bar {
