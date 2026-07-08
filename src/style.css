@@ -1684,3 +1684,93 @@ textarea {
   gap: 0.5rem;
   margin-top: 0.25rem;
 }
+
+/* ==========================================
+   EXECUTIVE RESUME PREVIEW
+   ========================================== */
+.resume-preview {
+  background: hsl(222, 40%, 10%);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  font-family: var(--font-primary);
+  color: var(--text-primary);
+}
+.resume-preview.placeholder-preview {
+  opacity: 0.6;
+}
+.resume-header {
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+.resume-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+  color: var(--text-primary);
+}
+.resume-title {
+  font-size: 0.95rem;
+  color: var(--color-primary);
+  margin: 0;
+  font-weight: 500;
+}
+.resume-section {
+  margin-bottom: 1rem;
+}
+.resume-section h3,
+.resume-section h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.25rem;
+}
+.resume-section h5 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0.2rem;
+}
+.resume-section p {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0.3rem 0;
+}
+.resume-section ul {
+  margin: 0.2rem 0;
+  padding-left: 1.2rem;
+}
+.resume-section li {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 0.15rem;
+}
+.resume-skill-tag {
+  font-size: 0.72rem;
+  margin: 0.15rem 0.2rem;
+}
+#btn-export-resume {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+}
+
+@media print {
+  .resume-preview {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 0;
+  }
+  .resume-preview .resume-name { color: #000; }
+  .resume-preview .resume-title { color: #1a56db; }
+  .resume-preview .resume-section h3,
+  .resume-preview .resume-section h4 { color: #333; }
+  .resume-preview .resume-section p { color: #444; }
+  .resume-preview .resume-section li { color: #444; }
+}

@@ -289,20 +289,28 @@
               </div>
             </div>
 
-            <!-- Tips Panel -->
-            <div class="card">
+            <!-- Executive Resume Preview -->
+            <div class="card" id="cv-preview-card">
               <div class="card-header">
-                <h3><i class="fa-solid fa-lightbulb"></i> CV Optimization Tips</h3>
+                <h3><i class="fa-solid fa-file-lines"></i> Executive Resume Preview</h3>
+                <button type="button" id="btn-export-resume" class="btn btn-sm btn-outline">
+                  <i class="fa-solid fa-download"></i> Export
+                </button>
               </div>
-              <div class="card-body">
-                <ul class="tips-list">
-                  <li><strong>Be Quantifiable</strong>: Instead of "developed features", use "developed API features reducing latency by 30%".</li>
-                  <li><strong>List Core Keywords</strong>: ATS filters match specific keywords. Make sure technologies you know are explicitly mentioned.</li>
-                  <li><strong>Keep it Clean</strong>: Avoid complicated double-column structures in final exports. Simple, clean layouts are easier for parser algorithms.</li>
-                </ul>
-                <div class="alert alert-info mt-4">
-                  <i class="fa-solid fa-shield-halved"></i>
-                  <p>All data is stored safely in your browser and never sent to any external server (except directly to your chosen AI endpoint when analyzing).</p>
+              <div class="card-body" id="cv-preview-body">
+                <div class="resume-preview placeholder-preview">
+                  <div class="resume-header">
+                    <h2 class="resume-name">Your Name</h2>
+                    <p class="resume-title">Professional Headline</p>
+                  </div>
+                  <div class="resume-section">
+                    <h4>Skills</h4>
+                    <p class="text-muted">—</p>
+                  </div>
+                  <div class="resume-section">
+                    <h4>Experience & Education</h4>
+                    <p class="text-muted">Upload or paste your CV to see a live preview here.</p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -104,6 +104,7 @@ function setupEventListeners() {
   // CV Form
   document.getElementById('form-cv').addEventListener('submit', handleCVSubmit);
   document.getElementById('btn-clear-cv').addEventListener('click', handleCVClear);
+  document.getElementById('btn-export-resume')?.addEventListener('click', handleExportResume);
 
   // Job Form
   document.getElementById('form-job').addEventListener('submit', handleJobSubmit);
@@ -291,6 +292,18 @@ function handleCVSubmit(e) {
   renderCVDetails();
   renderDashboard();
   showToast("CV profile updated successfully.");
+}
+
+function handleExportResume() {
+  if (!state.cv) { showToast('No CV data to export.'); return; }
+  const md = `# ${state.cv.fullName}\n## ${state.cv.title}\n\n**Skills**: ${state.cv.skills}\n\n${state.cv.body}`;
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${state.cv.fullName.replace(/\s+/g, '_')}_Resume.md`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Resume exported as Markdown.');
 }
 
 function handleCVClear() {
@@ -1160,6 +1173,60 @@ function renderCVDetails() {
     statCvStatus.className = 'stat-value text-muted';
     summaryBox.innerHTML = '<p class="text-muted">No resume uploaded. Go to the "My CV Profile" tab to add your professional profile details.</p>';
   }
+  renderCVPreview();
+}
+
+function renderCVPreview() {
+  const container = document.getElementById('cv-preview-body');
+  if (!container) return;
+
+  if (!state.cv || !state.cv.body) {
+    container.innerHTML = `
+      <div class="resume-preview placeholder-preview">
+        <div class="resume-header">
+          <h2 class="resume-name">${state.cv?.fullName || 'Your Name'}</h2>
+          <p class="resume-title">${state.cv?.title || 'Professional Headline'}</p>
+        </div>
+        <div class="resume-section">
+          <h4>Skills</h4>
+          <p class="text-muted">${state.cv?.skills || '—'}</p>
+        </div>
+        <div class="resume-section">
+          <h4>Experience & Education</h4>
+          <p class="text-muted">Upload or paste your CV to see a live preview here.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const bodyHtml = state.cv.body
+    .replace(/^### (.+)$/gm, '<h5>$1</h5>')
+    .replace(/^## (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^# (.+)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+
+  const skillTags = (state.cv.skills || '').split(',').map(s => `<span class="badge badge-secondary resume-skill-tag">${s.trim()}</span>`).join('');
+
+  container.innerHTML = `
+    <div class="resume-preview">
+      <div class="resume-header">
+        <h2 class="resume-name">${state.cv.fullName || 'Your Name'}</h2>
+        <p class="resume-title">${state.cv.title || 'Professional Headline'}</p>
+      </div>
+      <div class="resume-section">
+        <h4>Skills</h4>
+        <div class="skills-mini-list">${skillTags || '<span class="text-muted">—</span>'}</div>
+      </div>
+      <div class="resume-section">
+        <h4>Experience & Education</h4>
+        <p>${bodyHtml}</p>
+      </div>
+    </div>`;
 }
 
 function renderJobsTab() {
