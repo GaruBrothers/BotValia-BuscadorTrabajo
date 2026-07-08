@@ -1376,7 +1376,31 @@
             <i class="fa-solid fa-shield-halved"></i>
             <p><strong>Privacy First:</strong> All data stays in your browser. No backend servers. No data leaks.</p>
           </div>
-          <div class="form-actions justify-end">
+
+          <!-- FAQ section -->
+          <h4 class="text-sm" style="margin:1rem 0 0.5rem"><i class="fa-solid fa-circle-question"></i> How Matching Works</h4>
+          <details class="faq-item">
+            <summary>How does the matching algorithm calculate the score?</summary>
+            <p class="text-xs text-muted">It compares keywords in your CV against the job description, weighs synonym groups (e.g., "Fullstack" matches "Frontend" + "Backend"), and uses the customizable weight sliders in the Match Center to prioritize what matters most to you.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What are the customizable skill weight sliders?</summary>
+            <p class="text-xs text-muted">Each skill in your CV can be weighted 1-100 in the Match Center. Higher weights mean the matching algorithm will give more credit for matching that specific keyword. Use this to make your strongest skills matter more.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I use this offline?</summary>
+            <p class="text-xs text-muted">Yes! Once loaded, the app works fully offline. All AI in Demo Mode is generated locally. With a Gemini or OpenAI key, only those API calls require internet.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How is my API key handled?</summary>
+            <p class="text-xs text-muted">Your API key never leaves your browser. It is stored in your LocalStorage and used only by client-side fetch requests directly from your browser to Google/OpenAI servers. No middleman.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What keyboard shortcuts are available?</summary>
+            <p class="text-xs text-muted">Alt+1 through Alt+9 switch between tabs. Esc closes any open modal or overlay. Try them!</p>
+          </details>
+
+          <div class="form-actions justify-end mt-4">
             <button id="btn-dismiss-onboarding" class="btn btn-primary">Get Started</button>
           </div>
         </div>

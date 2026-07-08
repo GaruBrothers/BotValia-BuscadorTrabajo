@@ -1688,6 +1688,72 @@ textarea {
 }
 
 /* ==========================================
+   FAQ ITEMS & GLOWING HOVER / ANIMATIONS
+   ========================================== */
+.faq-item {
+  background: hsla(217, 40%, 15%, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.78rem;
+}
+.faq-item summary {
+  cursor: pointer;
+  color: var(--text-primary);
+  padding: 0.3rem 0;
+  font-weight: 500;
+}
+.faq-item summary:hover { color: var(--color-primary); }
+.faq-item p {
+  margin: 0.4rem 0 0;
+  line-height: 1.5;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--color-primary);
+}
+
+/* Glow button hover */
+.btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(217, 90%, 60%, 0.25);
+}
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 16px hsla(217, 91%, 60%, 0.4);
+}
+.btn-secondary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px hsla(217, 50%, 50%, 0.15);
+}
+
+/* Card hover accents */
+.card, .kanban-card, .resume-preview, .skill-tag-proficiency {
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.card:hover {
+  border-color: hsla(217, 90%, 60%, 0.3);
+  box-shadow: 0 0 18px hsla(217, 90%, 60%, 0.06);
+}
+.kanban-card:hover {
+  border-color: hsla(217, 90%, 60%, 0.4);
+  box-shadow: 0 4px 12px hsla(0, 0%, 0%, 0.3);
+}
+
+/* Subtle fade animation for inputs */
+input, textarea, select {
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 8px hsla(217, 90%, 60%, 0.15);
+}
+
+/* ==========================================
    SYNC BADGE / SIDEBAR TOGGLE / KEYBOARD HINTS / ONBOARDING
    ========================================== */
 .sync-badge {
