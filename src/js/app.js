@@ -38,6 +38,14 @@ function initLocalStorage() {
   if (!state.apiConfig || !state.apiConfig.provider) {
     state.apiConfig = { provider: 'mock', key: '', model: '' };
   }
+
+  // Check if first visit (onboarding)
+  if (!localStorage.getItem('botvalia_onboarded')) {
+    setTimeout(() => {
+      const modal = document.getElementById('onboarding-modal');
+      if (modal) modal.classList.remove('hidden');
+    }, 500);
+  }
 }
 
 // ==========================================================================
@@ -203,6 +211,14 @@ function setupEventListeners() {
     if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
     renderCalendar();
   });
+
+  // Onboarding modal
+  const dismissOnboarding = () => {
+    document.getElementById('onboarding-modal')?.classList.add('hidden');
+    localStorage.setItem('botvalia_onboarded', 'true');
+  };
+  document.getElementById('btn-close-onboarding')?.addEventListener('click', dismissOnboarding);
+  document.getElementById('btn-dismiss-onboarding')?.addEventListener('click', dismissOnboarding);
 
   // Data Management
   document.getElementById('btn-export-data')?.addEventListener('click', handleExportData);
