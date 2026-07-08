@@ -506,6 +506,7 @@ async function handleScanPortals() {
         localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
         renderJobsTab();
         renderDashboard();
+        renderKanbanBoard();
         showToast(`"${title}" imported to Job Tracker.`);
       });
     });
@@ -544,6 +545,7 @@ function handleJobSubmit(e) {
   resetJobForm();
   renderJobsTab();
   renderDashboard();
+  renderKanbanBoard();
 }
 
 function resetJobForm() {
@@ -579,6 +581,7 @@ function handleJobDelete(jobId) {
     localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
     renderJobsTab();
     renderDashboard();
+    renderKanbanBoard();
     showToast("Job removed.");
   }
 }
@@ -809,6 +812,7 @@ function renderAll() {
   renderJobsTab();
   renderSettingsForm();
   renderDashboard();
+  renderKanbanBoard();
 }
 
 function updateAPIIndicator() {
@@ -1132,6 +1136,104 @@ function updateStatusChart() {
       }
     });
   }
+}
+
+// ==========================================================================
+// KANBAN BOARD RENDER & DRAG-DROP
+// ==========================================================================
+function renderKanbanBoard() {
+  const statuses = ['Interested', 'Applied', 'Interviewing', 'Offer', 'Rejected'];
+
+  statuses.forEach(status => {
+    const container = document.getElementById(`kanban-${status}`);
+    const countEl = document.getElementById(`count-${status}`);
+    const jobsInStatus = state.jobs.filter(j => j.status === status);
+
+    countEl.innerText = jobsInStatus.length;
+
+    if (jobsInStatus.length === 0) {
+      container.innerHTML = `<div class="kanban-empty">Drop jobs here</div>`;
+      return;
+    }
+
+    container.innerHTML = jobsInStatus.map(job => {
+      const scoreHtml = job.matchScore !== undefined
+        ? `<span class="kanban-score"><span class="badge ${job.matchScore > 80 ? 'badge-success' : job.matchScore > 50 ? 'badge-warning' : 'badge-danger'}" style="font-size:0.65rem">${job.matchScore}%</span></span>`
+        : '';
+      return `
+        <div class="kanban-card" draggable="true" data-id="${job.id}" data-status="${status}">
+          <h5>${job.title}</h5>
+          <div class="kanban-company">${job.company}</div>
+          ${scoreHtml}
+        </div>
+      `;
+    }).join('');
+  });
+
+  // Bind drag events
+  document.querySelectorAll('.kanban-card').forEach(card => {
+    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('dragend', handleDragEnd);
+  });
+
+  document.querySelectorAll('.kanban-cards').forEach(col => {
+    col.addEventListener('dragover', handleDragOver);
+    col.addEventListener('dragenter', handleDragEnter);
+    col.addEventListener('dragleave', handleDragLeave);
+    col.addEventListener('drop', handleDrop);
+  });
+}
+
+let draggedJobId = null;
+
+function handleDragStart(e) {
+  draggedJobId = e.target.getAttribute('data-id');
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', draggedJobId);
+}
+
+function handleDragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('drag-over'));
+  draggedJobId = null;
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+  e.preventDefault();
+  const column = e.target.closest('.kanban-column');
+  if (column) column.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+  const column = e.target.closest('.kanban-column');
+  if (column) column.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const column = e.target.closest('.kanban-column');
+  if (!column) return;
+  column.classList.remove('drag-over');
+
+  const newStatus = column.getAttribute('data-status');
+  const jobId = e.dataTransfer.getData('text/plain') || draggedJobId;
+  if (!jobId || !newStatus) return;
+
+  const job = state.jobs.find(j => j.id === jobId);
+  if (!job || job.status === newStatus) return;
+
+  job.status = newStatus;
+  localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
+  renderKanbanBoard();
+  renderJobsTab();
+  renderDashboard();
+  showToast(`"${job.title}" moved to ${newStatus}`);
 }
 
 // Syncing functions across tabs
