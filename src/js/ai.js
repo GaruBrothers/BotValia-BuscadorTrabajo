@@ -146,6 +146,76 @@ Provide the output in clean, readable Markdown format with sections for Question
   }
 }
 
+/**
+ * Generates optimized search keywords and queries based on CV content.
+ * Extracts key skills, roles, and technologies for portal search.
+ */
+export async function generateSearchQuery(cv, apiConfig) {
+  const prompt = `You are a job search optimization expert. Given the following CV information, generate an optimized set of search keywords and queries for job portals.
+
+  CANDIDATE CV:
+  Name: ${cv.fullName}
+  Role: ${cv.title}
+  Skills: ${cv.skills}
+  Experience:
+  ${cv.body}
+
+  You must respond ONLY with a JSON object. Do not include markdown code block syntax. The JSON structure must be:
+  {
+    "primaryKeywords": ["keyword1", "keyword2", "keyword3"],
+    "secondaryKeywords": ["keyword1", "keyword2", "keyword3"],
+    "recommendedRoles": ["role1", "role2"],
+    "searchQueries": ["full query 1", "full query 2", "full query 3"],
+    "locations": ["Colombia", "Remote", "United States"],
+    "excludedTerms": ["term1", "term2"]
+  }`;
+
+  if (apiConfig.provider === 'mock') {
+    return simulateSearchQuery(cv);
+  }
+
+  try {
+    const rawResponse = await makeAICall(prompt, apiConfig);
+    const cleaned = cleanJsonResponse(rawResponse);
+    return JSON.parse(cleaned);
+  } catch (error) {
+    console.error("AI Error:", error);
+    throw new Error("Failed to generate search query. Error: " + error.message);
+  }
+}
+
+function simulateSearchQuery(cv) {
+  const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+  const title = cv.title || 'Software Developer';
+
+  const primaryKeywords = skills.slice(0, 5);
+  const secondaryKeywords = skills.slice(5, 10).length > 0
+    ? skills.slice(5, 10)
+    : ['Agile', 'Scrum', 'Teamwork', 'Problem Solving'];
+
+  const roleBase = title.split(' ').slice(0, 2).join(' ');
+  const recommendedRoles = [
+    title,
+    `${roleBase} ${skills[0] || ''}`,
+    `${roleBase} ${skills[1] || 'Cloud'}`
+  ];
+
+  const searchQueries = [
+    `${title} ${skills.slice(0, 3).join(' ')}`,
+    `${skills.slice(0, 2).join(' ')} ${roleBase}`,
+    `${title} remote`
+  ];
+
+  return {
+    primaryKeywords,
+    secondaryKeywords,
+    recommendedRoles,
+    searchQueries,
+    locations: ['Colombia', 'Remote', 'United States', 'Mexico'],
+    excludedTerms: ['Junior', 'Trainee', 'Intern']
+  };
+}
+
 /* ==========================================================================
    NETWORK CALL ORCHESTRATOR
    ========================================================================== */
