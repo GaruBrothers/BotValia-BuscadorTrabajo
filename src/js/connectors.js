@@ -53,6 +53,21 @@ const PORTAL_CONFIG = {
     buildQuery: (skills, title, location) => {
       const q = title || skills.split(',').slice(0, 3).join(' ');
       return `?q=${encodeURIComponent(q)}&l=${encodeURIComponent(location || '')}`;
+    },
+    buildRichQuery: (cv, desiredRole, remoteOnly = false, salary = '') => {
+      const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const topKeywords = skills.slice(0, 4);
+      const role = desiredRole || cv.title || '';
+      const parts = [role, ...topKeywords].filter(Boolean);
+      const q = parts.join(' ');
+      const params = new URLSearchParams();
+      params.set('q', q);
+      params.set('l', 'Colombia');
+      params.set('sort', 'date');
+      if (remoteOnly) params.set('sc', '0kf%3Aattr(DSQF7)'); // Remote-only filter
+      if (salary) params.set('salary', salary);
+      params.set('fromage', '14');
+      return `?${params.toString()}`;
     }
   },
   torre: {
@@ -93,6 +108,10 @@ export function getAllPortalKeys() {
 
 export function buildLinkedInRichQuery(cv, desiredRole) {
   return PORTAL_CONFIG.linkedin.buildRichQuery(cv, desiredRole);
+}
+
+export function buildIndeedRichQuery(cv, desiredRole, remoteOnly, salary) {
+  return PORTAL_CONFIG.indeed.buildRichQuery(cv, desiredRole, remoteOnly, salary);
 }
 
 /**
