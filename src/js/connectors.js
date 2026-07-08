@@ -11,7 +11,38 @@ const PORTAL_CONFIG = {
     baseUrl: 'https://www.linkedin.com/jobs/search/',
     buildQuery: (skills, title, location) => {
       const keywords = title || skills.split(',').slice(0, 3).join(' ');
-      return `?keywords=${encodeURIComponent(keywords)}&location=${encodeURIComponent(location || '')}`;
+      const params = new URLSearchParams();
+      params.set('keywords', keywords);
+      if (location) params.set('location', location);
+      // Extract experience level from title
+      const seniority = (title || '').toLowerCase().includes('senior') ? '4' : (title || '').toLowerCase().includes('junior') ? '2' : '3';
+      params.set('f_E', seniority);
+      params.set('f_TPR', 'r2592000'); // Past 30 days
+      params.set('sortBy', 'DD'); // Most recent
+      return `?${params.toString()}`;
+    },
+    extractSkills: (cv) => {
+      const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const title = (cv.title || '').toLowerCase();
+      if (title.includes('fullstack') || title.includes('full stack')) skills.unshift('Full Stack');
+      if (title.includes('frontend') || title.includes('front-end')) skills.unshift('Front End');
+      if (title.includes('backend') || title.includes('back-end')) skills.unshift('Back End');
+      if (title.includes('devops')) skills.unshift('DevOps');
+      if (title.includes('data')) skills.unshift('Data');
+      return [...new Set(skills)];
+    },
+    buildRichQuery: (cv, desiredRole) => {
+      const extracted = PORTAL_CONFIG.linkedin.extractSkills(cv);
+      const topSkills = extracted.slice(0, 5).join(' OR ');
+      const roleQuery = desiredRole || cv.title || '';
+      const location = 'Colombia';
+      const params = new URLSearchParams();
+      params.set('keywords', `${roleQuery} ${topSkills}`);
+      params.set('location', location);
+      params.set('f_TPR', 'r2592000');
+      params.set('sortBy', 'DD');
+      params.set('f_WT', '1,2,3'); // On-site, Remote, Hybrid
+      return `?${params.toString()}`;
     }
   },
   indeed: {
@@ -58,6 +89,10 @@ export function buildPortalUrl(portal, cvSkills, jobTitle, location) {
 
 export function getAllPortalKeys() {
   return Object.keys(PORTAL_CONFIG);
+}
+
+export function buildLinkedInRichQuery(cv, desiredRole) {
+  return PORTAL_CONFIG.linkedin.buildRichQuery(cv, desiredRole);
 }
 
 /**
