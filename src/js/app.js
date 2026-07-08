@@ -1078,6 +1078,33 @@ function renderMatchResults(analysis, job) {
   fill.style.width = `${analysis.score}%`;
   summaryText.innerText = analysis.summary || "";
 
+  // Keyword Density Matcher
+  const keywordContainer = document.getElementById('keyword-density-bars');
+  if (keywordContainer && job) {
+    const cvText = (state.cv?.body || '').toLowerCase();
+    const jobText = ((job.description || '') + ' ' + (job.title || '')).toLowerCase();
+    const keywords = ['experience', 'team', 'development', 'design', 'management', 'analysis', 'implementation', 'testing', 'deployment', 'optimization', 'architecture', 'security', 'agile', 'leadership', 'communication', 'problem-solving', 'fullstack', 'frontend', 'backend', 'api', 'cloud', 'database', 'pipeline', 'monitoring', 'performance'];
+    const densityHtml = keywords.map(kw => {
+      const cvCount = (cvText.match(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+      const jobCount = (jobText.match(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+      if (cvCount === 0 && jobCount === 0) return '';
+      const max = Math.max(cvCount, jobCount, 1);
+      return `
+        <div class="density-row">
+          <span class="density-label">${kw}</span>
+          <div class="density-bars">
+            <div class="density-bar" style="width:${(cvCount/max)*80 + 10}%">
+              <span class="density-count cv">CV: ${cvCount}</span>
+            </div>
+            <div class="density-bar job-density" style="width:${(jobCount/max)*80 + 10}%">
+              <span class="density-count job">Job: ${jobCount}</span>
+            </div>
+          </div>
+        </div>`;
+    }).filter(Boolean).slice(0, 10).join('');
+    keywordContainer.innerHTML = densityHtml || '<p class="text-xs text-muted">No common keywords detected.</p>';
+  }
+
   // Comparison bars: CV skills vs Job requirements
   const barsContainer = document.getElementById('skills-comparison-bars');
   if (barsContainer) {
