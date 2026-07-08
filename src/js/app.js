@@ -182,6 +182,9 @@ function setupEventListeners() {
   // Scan Portals Button
   document.getElementById('btn-scan-portals').addEventListener('click', handleScanPortals);
 
+  // Source filter for Job Tracker
+  document.getElementById('filter-source')?.addEventListener('change', () => renderJobsTab());
+
   // Clear Results Button
   document.getElementById('btn-clear-results').addEventListener('click', () => {
     document.getElementById('connector-results-panel').classList.add('hidden');
@@ -881,17 +884,20 @@ function renderJobsTab() {
   }
 
   // Draw list cards
-  if (state.jobs.length === 0) {
+  const filterSource = document.getElementById('filter-source')?.value || '';
+  const filteredJobs = filterSource ? state.jobs.filter(j => j.source === filterSource) : state.jobs;
+
+  if (filteredJobs.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <i class="fa-solid fa-briefcase"></i>
-        <p>No jobs added yet. Use the form on the left or load the demo data to populate this dashboard.</p>
+        <p>${state.jobs.length === 0 ? 'No jobs added yet. Use the form on the left or load the demo data to populate this dashboard.' : 'No jobs match the selected source filter.'}</p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = state.jobs.map(job => {
+  container.innerHTML = filteredJobs.map(job => {
     let scoreBadge = '';
     if (job.matchScore !== undefined) {
       const levelClass = job.matchScore > 80 ? 'badge-success' : job.matchScore > 50 ? 'badge-warning' : 'badge-danger';
