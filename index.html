@@ -187,6 +187,19 @@
                 <span class="text-muted text-xs">Saved locally in browser</span>
               </div>
               <div class="card-body">
+                <!-- File Upload Zone -->
+                <div class="upload-zone" id="upload-zone">
+                  <input type="file" id="cv-file-input" accept=".txt,.pdf" hidden>
+                  <div class="upload-zone-content">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p><strong>Upload your CV file</strong></p>
+                    <p class="text-xs text-muted">Drag & drop a .txt or .pdf file, or click to browse</p>
+                  </div>
+                  <div class="upload-zone-progress hidden" id="upload-progress">
+                    <div class="spinner-sm"></div>
+                    <span id="upload-status">Parsing file...</span>
+                  </div>
+                </div>
                 <form id="form-cv">
                   <div class="form-group">
                     <label for="cv-full-name">Full Name</label>

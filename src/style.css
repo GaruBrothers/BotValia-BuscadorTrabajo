@@ -1037,3 +1037,56 @@ textarea {
 .text-sm { font-size: 0.85rem; }
 .text-2xl { font-size: 1.5rem; }
 .m-0 { margin: 0; }
+
+/* ==========================================
+   FILE UPLOAD ZONE
+   ========================================== */
+.upload-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--color-primary);
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.upload-zone.drag-over {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.upload-zone-content i {
+  font-size: 2rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.upload-zone.has-file .upload-zone-content i {
+  color: var(--color-success);
+}
+
+.upload-zone-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}

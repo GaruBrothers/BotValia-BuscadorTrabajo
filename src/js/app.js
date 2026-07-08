@@ -176,6 +176,9 @@ function setupEventListeners() {
       updateToolsSelectedJobDetails();
     }
   });
+
+  // File Upload for CV
+  setupFileUpload();
 }
 
 // ==========================================================================
@@ -215,10 +218,117 @@ function handleCVClear() {
     state.cv = null;
     localStorage.removeItem('botvalia_cv');
     document.getElementById('form-cv').reset();
+    document.getElementById('upload-zone').classList.remove('has-file');
     renderCVDetails();
     renderDashboard();
     showToast("CV profile cleared.");
   }
+}
+
+// ==========================================================================
+// FILE UPLOAD (CV Parsing)
+// ==========================================================================
+function setupFileUpload() {
+  const uploadZone = document.getElementById('upload-zone');
+  const fileInput = document.getElementById('cv-file-input');
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleFileSelect(e.target.files[0]);
+    }
+    fileInput.value = '';
+  });
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('drag-over');
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length > 0) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  });
+}
+
+async function handleFileSelect(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const progress = document.getElementById('upload-progress');
+  const status = document.getElementById('upload-status');
+  const uploadZone = document.getElementById('upload-zone');
+
+  progress.classList.remove('hidden');
+  status.innerText = `Parsing ${file.name}...`;
+
+  try {
+    let text = '';
+    if (ext === 'txt') {
+      text = await parseTxtFile(file);
+    } else if (ext === 'pdf') {
+      text = await parsePdfFile(file);
+    } else {
+      showToast('Unsupported file type. Please upload a .txt or .pdf file.');
+      progress.classList.add('hidden');
+      return;
+    }
+
+    if (text) {
+      document.getElementById('cv-body').value = text;
+      uploadZone.classList.add('has-file');
+      showToast(`CV content extracted from ${file.name}`);
+    }
+  } catch (err) {
+    showToast('Error parsing file: ' + err.message);
+  } finally {
+    progress.classList.add('hidden');
+  }
+}
+
+function parseTxtFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
+  });
+}
+
+async function parsePdfFile(file) {
+  if (typeof pdfjsLib === 'undefined') {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    fullText += pageText + '\n\n';
+  }
+
+  return fullText.trim();
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    document.head.appendChild(script);
+  });
 }
 
 function handleJobSubmit(e) {
