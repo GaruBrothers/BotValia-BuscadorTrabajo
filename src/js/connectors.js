@@ -135,6 +135,42 @@ const PORTAL_CONFIG = {
     buildQuery: (skills, title, location) => {
       const q = title || skills.split(',').slice(0, 3).join(' ');
       return `?q=${encodeURIComponent(q)}&l=${encodeURIComponent(location || 'colombia')}`;
+    },
+    buildRichQuery: (cv, desiredRole, country = 'colombia') => {
+      const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const topTech = skills.slice(0, 3).join(' ');
+      const role = desiredRole || cv.title || '';
+      const q = [role, topTech].filter(Boolean).join(' ');
+      const params = new URLSearchParams();
+      params.set('q', q);
+      params.set('l', country);
+      params.set('sr', '50'); // 50km radius
+      params.set('p', '1');
+      params.set('sort', 'date_desc');
+      return `?${params.toString()}`;
+    },
+    /**
+     * Adapter for Computrabajo's regional search.
+     * Supports LATAM countries: colombia, mexico, argentina, chile, peru, ecuador.
+     */
+    buildRegionalSearch: (cv, desiredRole, country = 'colombia') => {
+      const countryDomains = {
+        colombia: 'www.computrabajo.com',
+        mexico: 'www.computrabajo.com.mx',
+        argentina: 'www.computrabajo.com.ar',
+        chile: 'www.computrabajo.cl',
+        peru: 'www.computrabajo.com.pe',
+        ecuador: 'www.computrabajo.com.ec'
+      };
+      const domain = countryDomains[country] || countryDomains.colombia;
+      const skills = (cv.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const topKeywords = skills.slice(0, 2).join(' ');
+      const role = desiredRole || cv.title || '';
+      const q = [role, topKeywords].filter(Boolean).join(' ');
+      const params = new URLSearchParams();
+      params.set('q', q);
+      params.set('sort', 'date_desc');
+      return `https://${domain}/ofertas-de-trabajo/?${params.toString()}`;
     }
   }
 };
@@ -167,6 +203,14 @@ export function buildTorreRichQuery(cv, desiredRole) {
 
 export async function simulateTorreApi(cv, desiredRole, count) {
   return PORTAL_CONFIG.torre.simulateApiSearch(cv, desiredRole, count);
+}
+
+export function buildComputrabajoRichQuery(cv, desiredRole, country) {
+  return PORTAL_CONFIG.computrabajo.buildRichQuery(cv, desiredRole, country);
+}
+
+export function buildComputrabajoRegionalSearch(cv, desiredRole, country) {
+  return PORTAL_CONFIG.computrabajo.buildRegionalSearch(cv, desiredRole, country);
 }
 
 /**
