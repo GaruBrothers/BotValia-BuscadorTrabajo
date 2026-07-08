@@ -1836,6 +1836,24 @@ textarea {
 }
 
 /* ==========================================
+   CV VERSION SELECTOR
+   ========================================== */
+.cv-version-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.input-sm {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  padding: 0.2rem 0.4rem;
+}
+
+/* ==========================================
    CHARACTER COUNTER
    ========================================== */
 .char-counter {

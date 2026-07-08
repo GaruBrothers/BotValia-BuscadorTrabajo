@@ -34,6 +34,14 @@ function initLocalStorage() {
     state.cv = JSON.parse(storedCv);
     if (!state.cv.skillProficiencies) state.cv.skillProficiencies = {};
   }
+  // Initialize version history
+  if (!localStorage.getItem('botvalia_cv_history')) {
+    if (state.cv) {
+      localStorage.setItem('botvalia_cv_history', JSON.stringify([{ ...state.cv, _version: 1, _timestamp: Date.now() }]));
+    } else {
+      localStorage.setItem('botvalia_cv_history', JSON.stringify([]));
+    }
+  }
   if (storedJobs) state.jobs = JSON.parse(storedJobs);
   if (storedConfig) state.apiConfig = JSON.parse(storedConfig);
 
@@ -290,6 +298,7 @@ function loadDemoData() {
   
   localStorage.setItem('botvalia_cv', JSON.stringify(state.cv));
   localStorage.setItem('botvalia_jobs', JSON.stringify(state.jobs));
+  saveCVVersion(state.cv);
   
   renderAll();
   showToast("Demo datasets successfully loaded!");
@@ -317,6 +326,7 @@ function handleCVSubmit(e) {
 
   state.cv = cvData;
   localStorage.setItem('botvalia_cv', JSON.stringify(cvData));
+  saveCVVersion(cvData);
   
   renderCVDetails();
   renderDashboard();
@@ -354,6 +364,49 @@ async function handleAISuggest(textareaId) {
   } catch (err) {
     box.innerHTML = `<p class="text-xs text-danger">Error: ${err.message}</p>`;
   }
+}
+
+function saveCVVersion(cvData) {
+  try {
+    const history = JSON.parse(localStorage.getItem('botvalia_cv_history') || '[]');
+    const last = history[history.length - 1];
+    const prevBody = last ? last.body : '';
+    if (cvData.body !== prevBody || history.length === 0) {
+      const version = (last ? last._version : 0) + 1;
+      history.push({ ...cvData, _version: version, _timestamp: Date.now() });
+      // Keep max 10 versions
+      if (history.length > 10) history.splice(0, history.length - 10);
+      localStorage.setItem('botvalia_cv_history', JSON.stringify(history));
+    }
+  } catch (e) { /* ignore storage errors */ }
+}
+
+function renderCVVersionSelector() {
+  const container = document.getElementById('cv-version-selector');
+  if (!container) return;
+  const history = JSON.parse(localStorage.getItem('botvalia_cv_history') || '[]');
+  if (history.length <= 1) { container.innerHTML = ''; return; }
+  const options = history.map(v => `<option value="${v._version}">v${v._version} — ${new Date(v._timestamp).toLocaleDateString()}</option>`).join('');
+  container.innerHTML = `
+    <label class="text-xs text-muted mr-1">Restore version:</label>
+    <select id="cv-version-select" class="input-sm">${options}</select>
+    <button type="button" id="btn-restore-version" class="btn btn-xs btn-outline">Restore</button>
+  `;
+  document.getElementById('btn-restore-version')?.addEventListener('click', () => {
+    const sel = document.getElementById('cv-version-select');
+    const version = parseInt(sel.value);
+    const entry = history.find(v => v._version === version);
+    if (entry) {
+      document.getElementById('cv-summary').value = '';
+      document.getElementById('cv-experience').value = '';
+      document.getElementById('cv-education').value = '';
+      document.getElementById('cv-full-name').value = entry.fullName || '';
+      document.getElementById('cv-title').value = entry.title || '';
+      document.getElementById('cv-skills').value = entry.skills || '';
+      document.getElementById('cv-body').value = entry.body || '';
+      showToast(`Version ${version} restored. Click "Save Resume Profile" to persist.`);
+    }
+  });
 }
 
 function addMissingSkill(skillName) {
@@ -1383,6 +1436,7 @@ function renderCVDetails() {
   renderCVPreview();
   renderSkillTags();
   renderSkillsCloud();
+  renderCVVersionSelector();
 }
 
 function renderCVPreview() {
